@@ -4,6 +4,7 @@ import ReflectionCard from "@/components/ReflectionCard";
 import CameraView from "@/components/CameraView";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [showCamera, setShowCamera] = useState(false);
@@ -11,7 +12,15 @@ const Index = () => {
 
   return (
     <div className="min-h-screen p-6 space-y-8 animate-fadeIn pattern-bg">
-      <header className="space-y-2 text-center">
+      <header className="space-y-2 text-center relative">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute left-0 top-0 hover:bg-sage-100 dark:hover:bg-sage-900"
+          onClick={() => navigate('/')}
+        >
+          <Home className="w-5 h-5" />
+        </Button>
         <h1 className="text-4xl font-semibold tracking-tight text-balance bg-clip-text text-transparent bg-gradient-to-r from-sage-600 to-sand-600 dark:from-sand-400 dark:to-sand-200">
           Quran Tadabbur
         </h1>
