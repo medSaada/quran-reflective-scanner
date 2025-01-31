@@ -43,24 +43,17 @@ const Index = () => {
         <main className="space-y-8 max-w-2xl mx-auto">
           <section className="grid gap-4">
             <ActionCard
-              icon={<Home className="w-6 h-6" />}
-              title="Return to Landing"
-              description="Go back to the welcome page"
-              onClick={() => navigate('/')}
-              className="animate-float"
-            />
-            <ActionCard
               icon={<Camera className="w-6 h-6" />}
               title="Scan Ayah"
               description="Use your camera to scan and reflect on any verse"
               onClick={() => setShowCamera(true)}
-              className="animate-float [animation-delay:200ms]"
+              className="animate-float"
             />
             <ActionCard
               icon={<Book className="w-6 h-6" />}
               title="Enter Manually"
               description="Type or paste the verse you want to reflect on"
-              className="animate-float [animation-delay:400ms]"
+              className="animate-float [animation-delay:200ms]"
             />
           </section>
 
