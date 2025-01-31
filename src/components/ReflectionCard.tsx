@@ -10,9 +10,13 @@ interface ReflectionCardProps {
 
 const ReflectionCard = ({ ayah, translation, reflection, date, className }: ReflectionCardProps) => {
   return (
-    <div className={cn("p-6 glass rounded-2xl space-y-4", className)}>
+    <div className={cn(
+      "p-6 glass rounded-2xl space-y-4 fancy-border",
+      "hover:shadow-lg hover:-translate-y-1 transition-all duration-300",
+      className
+    )}>
       <div className="space-y-2">
-        <p className="text-right text-xl leading-relaxed">{ayah}</p>
+        <p className="text-right text-xl leading-relaxed font-arabic">{ayah}</p>
         <p className="text-sm text-muted-foreground italic">{translation}</p>
       </div>
       <div className="pt-4 border-t border-border">
