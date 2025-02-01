@@ -103,29 +103,17 @@ const CameraCapture = () => {
       const image = new Image();
       image.src = sourceImage;
       
-      // Create a temporary canvas to draw the full image first
-      const tempCanvas = document.createElement('canvas');
-      const tempCtx = tempCanvas.getContext('2d');
-      
       image.onload = () => {
-        if (!tempCtx) return;
-
-        // Set temp canvas to full image size
-        tempCanvas.width = image.naturalWidth;
-        tempCanvas.height = image.naturalHeight;
-        
-        // Draw the full image on temp canvas
-        tempCtx.drawImage(image, 0, 0);
-
-        // Create the final canvas for the crop
+        // Create canvas with original image dimensions
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Calculate the pixel values from percentages
+        // Calculate actual pixel values from percentages
         const scaleX = image.naturalWidth / 100;
         const scaleY = image.naturalHeight / 100;
 
+        // Convert crop percentages to pixels
         const pixelCrop = {
           x: Math.round(cropData.x * scaleX),
           y: Math.round(cropData.y * scaleY),
@@ -133,20 +121,22 @@ const CameraCapture = () => {
           height: Math.round(cropData.height * scaleY)
         };
 
-        // Set final canvas size to match the cropped area exactly
+        // Set canvas size to the cropped dimensions
         canvas.width = pixelCrop.width;
         canvas.height = pixelCrop.height;
 
-        // Get the image data from the temp canvas
-        const imageData = tempCtx.getImageData(
+        // First draw the cropped portion
+        ctx.drawImage(
+          image,
           pixelCrop.x,
           pixelCrop.y,
           pixelCrop.width,
+          pixelCrop.height,
+          0,
+          0,
+          pixelCrop.width,
           pixelCrop.height
         );
-
-        // Put the image data on the final canvas
-        ctx.putImageData(imageData, 0, 0);
 
         resolve(canvas.toDataURL('image/jpeg', 0.95));
       };
