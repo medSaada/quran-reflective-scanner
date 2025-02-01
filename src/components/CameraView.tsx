@@ -13,6 +13,7 @@ const CameraView = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
+  // Cleanup function to stop the camera stream when component unmounts
   useEffect(() => {
     return () => {
       if (streamRef.current) {
@@ -23,6 +24,7 @@ const CameraView = () => {
 
   const handleActivateCamera = async () => {
     try {
+      console.log('Activating camera...');
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           facingMode: 'environment',
@@ -34,7 +36,9 @@ const CameraView = () => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
+        // Explicitly wait for the video to be ready to play
         await videoRef.current.play();
+        console.log('Camera activated successfully');
       }
       setIsActive(true);
     } catch (error) {
