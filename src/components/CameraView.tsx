@@ -33,6 +33,7 @@ const CameraView = () => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
+        await videoRef.current.play();
       }
       setIsActive(true);
     } catch (error) {
@@ -52,7 +53,7 @@ const CameraView = () => {
         setCapturedImage(imageDataUrl);
         setIsCropping(true);
         
-        // Stop the camera stream
+        // Stop the camera stream after capturing
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(track => track.stop());
         }
