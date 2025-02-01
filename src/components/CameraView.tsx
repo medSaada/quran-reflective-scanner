@@ -9,6 +9,7 @@ const CameraView = () => {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [crop, setCrop] = useState<Crop>();
   const [isCropping, setIsCropping] = useState(false);
+  const [isPreview, setIsPreview] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -51,7 +52,7 @@ const CameraView = () => {
         ctx.drawImage(videoRef.current, 0, 0);
         const imageDataUrl = canvas.toDataURL('image/jpeg');
         setCapturedImage(imageDataUrl);
-        setIsCropping(true);
+        setIsPreview(true);
         
         // Stop the camera stream after capturing
         if (streamRef.current) {
@@ -60,6 +61,17 @@ const CameraView = () => {
         setIsActive(false);
       }
     }
+  };
+
+  const handleConfirmImage = () => {
+    setIsPreview(false);
+    setIsCropping(true);
+  };
+
+  const handleRetake = () => {
+    setCapturedImage(null);
+    setIsPreview(false);
+    handleActivateCamera();
   };
 
   const handleSaveCrop = () => {
@@ -100,6 +112,7 @@ const CameraView = () => {
   const handleReset = () => {
     setCapturedImage(null);
     setIsCropping(false);
+    setIsPreview(false);
     setIsActive(false);
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
@@ -108,7 +121,7 @@ const CameraView = () => {
 
   return (
     <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden glass animate-fadeIn">
-      {!isActive && !capturedImage ? (
+      {!isActive && !capturedImage && !isPreview ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
           <button
             onClick={handleActivateCamera}
@@ -134,6 +147,29 @@ const CameraView = () => {
               className="rounded-full w-12 h-12 p-0 bg-white/80"
             >
               <div className="w-8 h-8 rounded-full border-2 border-sage-600" />
+            </Button>
+          </div>
+        </div>
+      ) : isPreview && capturedImage ? (
+        <div className="relative h-full">
+          <img
+            src={capturedImage}
+            alt="Preview"
+            className="w-full h-full object-contain"
+          />
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
+            <Button
+              onClick={handleRetake}
+              variant="destructive"
+            >
+              Retake
+            </Button>
+            <Button
+              onClick={handleConfirmImage}
+              variant="default"
+              className="bg-sage-600 hover:bg-sage-700"
+            >
+              Confirm
             </Button>
           </div>
         </div>
