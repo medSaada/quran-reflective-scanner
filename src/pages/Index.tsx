@@ -46,15 +46,15 @@ const Index = () => {
         <Button
           variant="secondary"
           size="icon"
-          className="absolute left-0 top-0 glass shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-sage-300 dark:border-sage-700"
+          className="absolute left-0 top-0 glass shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-[#FFD700] dark:border-[#B8860B]"
           onClick={() => navigate('/')}
         >
-          <Home className="w-5 h-5 text-sage-700 dark:text-sage-300" />
+          <Home className="w-5 h-5 text-[#FFD700] dark:text-[#B8860B]" />
         </Button>
-        <h1 className="text-4xl font-semibold tracking-tight text-balance bg-clip-text text-transparent bg-gradient-to-r from-sage-600 to-sand-600 dark:from-sand-400 dark:to-sand-200">
+        <h1 className="text-4xl font-bold tracking-tight text-balance bg-clip-text text-transparent bg-gradient-to-r from-[#FFD700] to-[#B8860B] dark:from-[#FFD700] dark:to-[#F0E68C] drop-shadow-lg">
           Quran Tadabbur
         </h1>
-        <p className="text-muted-foreground text-lg">
+        <p className="text-lg font-medium text-[#F0E68C] dark:text-[#FFD700] drop-shadow-md">
           Reflect on the Quran with ease
         </p>
       </header>
