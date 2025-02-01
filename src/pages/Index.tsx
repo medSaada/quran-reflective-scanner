@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { processData } from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
+import { Squares } from "@/components/ui/squares-background";
 
 const Index = () => {
   const [showCamera, setShowCamera] = useState(false);
@@ -31,7 +32,16 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen p-6 space-y-8 animate-fadeIn pattern-bg">
+    <div className="min-h-screen p-6 space-y-8 animate-fadeIn relative">
+      <div className="absolute inset-0 -z-10">
+        <Squares 
+          direction="diagonal"
+          speed={0.5}
+          squareSize={40}
+          borderColor="#333" 
+          hoverFillColor="#222"
+        />
+      </div>
       <header className="space-y-2 text-center relative">
         <Button
           variant="ghost"
