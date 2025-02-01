@@ -13,7 +13,6 @@ const CameraView = () => {
   const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
-    // Cleanup function to stop the stream when component unmounts
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
@@ -34,7 +33,7 @@ const CameraView = () => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
-        await videoRef.current.play(); // Ensure video starts playing
+        await videoRef.current.play();
       }
       setIsActive(true);
     } catch (error) {
@@ -52,12 +51,13 @@ const CameraView = () => {
         ctx.drawImage(videoRef.current, 0, 0);
         const imageDataUrl = canvas.toDataURL('image/jpeg');
         setCapturedImage(imageDataUrl);
-        setIsCropping(false); // Start with preview first
+        setIsCropping(true); // Immediately show cropping interface after capture
         
         // Stop the camera stream
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(track => track.stop());
         }
+        setIsActive(false); // Hide camera view
       }
     }
   };
@@ -72,11 +72,9 @@ const CameraView = () => {
       
       if (!ctx) return;
       
-      // Set canvas size to crop size
       canvas.width = crop.width;
       canvas.height = crop.height;
       
-      // Draw the cropped image
       ctx.drawImage(
         image,
         crop.x,
@@ -89,10 +87,7 @@ const CameraView = () => {
         crop.height
       );
       
-      // Get the cropped image as data URL
       const croppedImageUrl = canvas.toDataURL('image/jpeg');
-      
-      // Here you can save the cropped image or send it to your backend
       console.log('Cropped image:', croppedImageUrl);
       
       // Reset states
@@ -113,7 +108,7 @@ const CameraView = () => {
 
   return (
     <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden glass animate-fadeIn">
-      {!isActive ? (
+      {!isActive && !capturedImage ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
           <button
             onClick={handleActivateCamera}
@@ -123,88 +118,56 @@ const CameraView = () => {
           </button>
           <p className="text-sm text-muted-foreground">Tap to activate camera</p>
         </div>
-      ) : (
+      ) : isActive ? (
         <div className="relative h-full">
-          {!capturedImage ? (
-            <>
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
-                <Button
-                  onClick={handleCapture}
-                  variant="secondary"
-                  className="rounded-full w-12 h-12 p-0 bg-white/80"
-                >
-                  <div className="w-8 h-8 rounded-full border-2 border-sage-600" />
-                </Button>
-              </div>
-            </>
-          ) : (
-            <div className="relative h-full">
-              {isCropping ? (
-                <>
-                  <ReactCrop
-                    crop={crop}
-                    onChange={c => setCrop(c)}
-                    className="h-full"
-                  >
-                    <img
-                      src={capturedImage}
-                      alt="Captured"
-                      className="max-h-full w-full object-contain"
-                    />
-                  </ReactCrop>
-                  <div className="absolute top-4 right-4 flex gap-2">
-                    <Button
-                      onClick={handleReset}
-                      variant="destructive"
-                      size="icon"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      onClick={handleSaveCrop}
-                      variant="default"
-                      className="bg-sage-600 hover:bg-sage-700"
-                    >
-                      Save Crop
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <div className="relative h-full">
-                  <img
-                    src={capturedImage}
-                    alt="Preview"
-                    className="w-full h-full object-contain"
-                  />
-                  <div className="absolute top-4 right-4 flex gap-2">
-                    <Button
-                      onClick={handleReset}
-                      variant="destructive"
-                      size="icon"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      onClick={() => setIsCropping(true)}
-                      variant="default"
-                      className="bg-sage-600 hover:bg-sage-700"
-                    >
-                      Crop Image
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
+            <Button
+              onClick={handleCapture}
+              variant="secondary"
+              className="rounded-full w-12 h-12 p-0 bg-white/80"
+            >
+              <div className="w-8 h-8 rounded-full border-2 border-sage-600" />
+            </Button>
+          </div>
         </div>
-      )}
+      ) : capturedImage && isCropping ? (
+        <div className="relative h-full">
+          <ReactCrop
+            crop={crop}
+            onChange={c => setCrop(c)}
+            className="h-full"
+          >
+            <img
+              src={capturedImage}
+              alt="Captured"
+              className="max-h-full w-full object-contain"
+            />
+          </ReactCrop>
+          <div className="absolute top-4 right-4 flex gap-2">
+            <Button
+              onClick={handleReset}
+              variant="destructive"
+              size="icon"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+            <Button
+              onClick={handleSaveCrop}
+              variant="default"
+              className="bg-sage-600 hover:bg-sage-700"
+            >
+              Save Crop
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };
