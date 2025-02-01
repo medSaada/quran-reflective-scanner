@@ -13,6 +13,7 @@ interface ExtractedText {
 const CameraCapture = () => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [croppedImage, setCroppedImage] = useState<string | null>(null);
   const [extractedText, setExtractedText] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -126,6 +127,28 @@ const CameraCapture = () => {
     });
   };
 
+  const handleConfirmCrop = async () => {
+    if (capturedImage && crop) {
+      const croppedImageUrl = await getCroppedImage(capturedImage, crop);
+      setCroppedImage(croppedImageUrl);
+      setIsCropping(false);
+      processImage(croppedImageUrl);
+    }
+  };
+
+  const retakeImage = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+    setCapturedImage(null);
+    setCroppedImage(null);
+    setExtractedText("");
+    setError(null);
+    setIsCropping(false);
+    setCrop(undefined);
+    initializeCamera(); // Re-initialize the camera
+  };
+
   const processImage = async (imageDataUrl: string) => {
     setIsLoading(true);
     setError(null);
@@ -179,22 +202,6 @@ const CameraCapture = () => {
       clearTimeout(timeoutId);
       setIsLoading(false);
     }
-  };
-
-  const handleConfirmCrop = async () => {
-    if (capturedImage && crop) {
-      const croppedImage = await getCroppedImage(capturedImage, crop);
-      setIsCropping(false);
-      processImage(croppedImage);
-    }
-  };
-
-  const retakeImage = () => {
-    setCapturedImage(null);
-    setExtractedText("");
-    setError(null);
-    setIsCropping(false);
-    setCrop(undefined);
   };
 
   if (permissionState === "denied") {
@@ -269,18 +276,29 @@ const CameraCapture = () => {
         <div className="space-y-4">
           <div className="relative aspect-video rounded-lg overflow-hidden">
             <img
-              src={capturedImage}
+              src={croppedImage || capturedImage}
               alt="Captured"
               className="w-full h-full object-cover"
             />
+            <Button
+              variant="outline"
+              onClick={retakeImage}
+              className="absolute top-4 right-4 flex items-center gap-2"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Retake
+            </Button>
           </div>
         </div>
       )}
 
       {isLoading && (
-        <div className="flex flex-col items-center justify-center gap-4 p-6 animate-pulse">
-          <div className="relative w-16 h-16">
-            <div className="absolute inset-0 rounded-full border-4 border-sage-200 border-t-sage-600 animate-spin" />
+        <div className="flex flex-col items-center justify-center gap-4 p-6">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-sage-200 border-t-sage-600 rounded-full animate-spin" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-12 h-12 border-4 border-sage-600 border-t-sage-200 rounded-full animate-spin-reverse" />
+            </div>
           </div>
           <p className="text-muted-foreground animate-pulse">Processing image...</p>
         </div>
