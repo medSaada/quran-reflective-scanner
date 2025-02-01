@@ -86,7 +86,7 @@ const CameraCapture = () => {
       const context = canvas.getContext('2d');
       if (context) {
         context.drawImage(videoRef.current, 0, 0);
-        const imageDataUrl = canvas.toDataURL('image/jpeg');
+        const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8); // Added quality parameter
         setCapturedImage(imageDataUrl);
         processImage(imageDataUrl);
       }
@@ -98,14 +98,25 @@ const CameraCapture = () => {
     setError(null);
     
     try {
+      // Remove data URL prefix to get base64 string
+      const base64Data = imageDataUrl.split(',')[1];
+      
       // Convert base64 to blob
-      const response = await fetch(imageDataUrl);
-      const blob = await response.blob();
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'image/jpeg' });
       
       // Create FormData
       const formData = new FormData();
       formData.append('file', blob, 'image.jpg');
       
+      console.log('Sending request to API...');
       const apiResponse = await axios.post<ExtractedText>(
         'http://127.0.0.1:8000/process-image/',
         formData,
@@ -116,6 +127,7 @@ const CameraCapture = () => {
         }
       );
       
+      console.log('API Response:', apiResponse.data);
       setExtractedText(apiResponse.data.text);
       toast({
         title: "Success",
