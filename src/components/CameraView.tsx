@@ -3,6 +3,7 @@ import { useRef, useState, useEffect } from "react";
 import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { Button } from "./ui/button";
+import { useToast } from "./ui/use-toast";
 
 const CameraView = () => {
   const [isActive, setIsActive] = useState(false);
@@ -12,6 +13,7 @@ const CameraView = () => {
   const [isPreview, setIsPreview] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const { toast } = useToast();
 
   // Cleanup function to stop the camera stream when component unmounts
   useEffect(() => {
@@ -24,7 +26,14 @@ const CameraView = () => {
 
   const handleActivateCamera = async () => {
     try {
-      console.log('Activating camera...');
+      console.log('Starting camera activation...');
+      
+      // Check if the browser supports getUserMedia
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera access is not supported by this browser');
+      }
+
+      // Request camera access with specific constraints
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           facingMode: 'environment',
@@ -33,16 +42,42 @@ const CameraView = () => {
         } 
       });
       
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-        // Explicitly wait for the video to be ready to play
-        await videoRef.current.play();
-        console.log('Camera activated successfully');
+      console.log('Camera permission granted, setting up video stream...');
+
+      if (!videoRef.current) {
+        throw new Error('Video element not found');
       }
+
+      // Set up video element with the stream
+      videoRef.current.srcObject = stream;
+      streamRef.current = stream;
+
+      // Wait for the video to be ready to play
+      await new Promise((resolve) => {
+        if (videoRef.current) {
+          videoRef.current.onloadedmetadata = () => {
+            console.log('Video metadata loaded');
+            resolve(true);
+          };
+        }
+      });
+
+      // Start playing the video
+      await videoRef.current.play();
+      console.log('Camera activated successfully');
+      
       setIsActive(true);
+      toast({
+        title: "Camera activated",
+        description: "You can now take a picture",
+      });
     } catch (error) {
       console.error("Error accessing camera:", error);
+      toast({
+        title: "Camera Error",
+        description: error instanceof Error ? error.message : "Failed to access camera",
+        variant: "destructive",
+      });
     }
   };
 
