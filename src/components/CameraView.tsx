@@ -16,7 +16,6 @@ const CameraView = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const { toast } = useToast();
 
-  // Cleanup function
   useEffect(() => {
     return () => {
       if (streamRef.current) {
@@ -32,6 +31,15 @@ const CameraView = () => {
         throw new Error('Camera access is not supported by this browser');
       }
 
+      // Ensure video element exists
+      if (!videoRef.current) {
+        console.error('Video element not found - waiting for mount');
+        await new Promise(resolve => setTimeout(resolve, 500)); // Small delay to wait for mount
+        if (!videoRef.current) {
+          throw new Error('Video element not found after waiting');
+        }
+      }
+
       console.log('Requesting camera access...');
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -40,10 +48,6 @@ const CameraView = () => {
           height: { ideal: 720 }
         }
       });
-
-      if (!videoRef.current) {
-        throw new Error('Video element not initialized');
-      }
 
       // Store stream reference
       streamRef.current = stream;
