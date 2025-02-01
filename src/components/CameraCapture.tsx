@@ -2,7 +2,9 @@ import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Camera, RotateCcw } from "lucide-react";
+import { Loader2, Camera, RotateCcw, Check, X } from "lucide-react";
+import ReactCrop, { type Crop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 
 interface ExtractedText {
   text: string;
@@ -15,6 +17,8 @@ const CameraCapture = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [permissionState, setPermissionState] = useState<PermissionState>("prompt");
+  const [crop, setCrop] = useState<Crop>();
+  const [isCropping, setIsCropping] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
@@ -86,22 +90,51 @@ const CameraCapture = () => {
       const context = canvas.getContext('2d');
       if (context) {
         context.drawImage(videoRef.current, 0, 0);
-        const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8); // Added quality parameter
+        const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
         setCapturedImage(imageDataUrl);
-        processImage(imageDataUrl);
+        setIsCropping(true);
       }
     }
+  };
+
+  const getCroppedImage = (sourceImage: string, cropData: Crop): Promise<string> => {
+    return new Promise((resolve) => {
+      const image = new Image();
+      image.src = sourceImage;
+      image.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        canvas.width = cropData.width;
+        canvas.height = cropData.height;
+
+        ctx.drawImage(
+          image,
+          cropData.x,
+          cropData.y,
+          cropData.width,
+          cropData.height,
+          0,
+          0,
+          cropData.width,
+          cropData.height
+        );
+
+        resolve(canvas.toDataURL('image/jpeg'));
+      };
+    });
   };
 
   const processImage = async (imageDataUrl: string) => {
     setIsLoading(true);
     setError(null);
     
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
     try {
-      // Remove data URL prefix to get base64 string
       const base64Data = imageDataUrl.split(',')[1];
-      
-      // Convert base64 to blob
       const byteCharacters = atob(base64Data);
       const byteNumbers = new Array(byteCharacters.length);
       
@@ -111,8 +144,6 @@ const CameraCapture = () => {
       
       const byteArray = new Uint8Array(byteNumbers);
       const blob = new Blob([byteArray], { type: 'image/jpeg' });
-      
-      // Create FormData
       const formData = new FormData();
       formData.append('file', blob, 'image.jpg');
       
@@ -121,9 +152,8 @@ const CameraCapture = () => {
         'http://127.0.0.1:8000/process-image/',
         formData,
         {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+          headers: { 'Content-Type': 'multipart/form-data' },
+          signal: controller.signal
         }
       );
       
@@ -135,21 +165,36 @@ const CameraCapture = () => {
       });
     } catch (err) {
       console.error('API error:', err);
-      setError("Failed to process image");
+      if (axios.isAxiosError(err) && err.code === 'ERR_CANCELED') {
+        setError("Request timed out. Please try again.");
+      } else {
+        setError("Failed to process image");
+      }
       toast({
         variant: "destructive",
         title: "Processing Error",
         description: "Failed to extract text from image",
       });
     } finally {
+      clearTimeout(timeoutId);
       setIsLoading(false);
     }
   };
 
-  const retryCapture = () => {
+  const handleConfirmCrop = async () => {
+    if (capturedImage && crop) {
+      const croppedImage = await getCroppedImage(capturedImage, crop);
+      setIsCropping(false);
+      processImage(croppedImage);
+    }
+  };
+
+  const retakeImage = () => {
     setCapturedImage(null);
     setExtractedText("");
     setError(null);
+    setIsCropping(false);
+    setCrop(undefined);
   };
 
   if (permissionState === "denied") {
@@ -158,9 +203,7 @@ const CameraCapture = () => {
         <p className="text-destructive font-medium">Camera access was denied</p>
         <Button
           variant="outline"
-          onClick={() => {
-            window.location.reload();
-          }}
+          onClick={() => window.location.reload()}
         >
           Request Permission Again
         </Button>
@@ -190,6 +233,38 @@ const CameraCapture = () => {
             </Button>
           </div>
         </div>
+      ) : isCropping ? (
+        <div className="space-y-4">
+          <ReactCrop
+            crop={crop}
+            onChange={(c) => setCrop(c)}
+            className="rounded-lg overflow-hidden bg-black"
+          >
+            <img
+              src={capturedImage}
+              alt="Captured"
+              className="w-full h-full object-cover"
+            />
+          </ReactCrop>
+          <div className="flex justify-center gap-4">
+            <Button
+              variant="outline"
+              onClick={retakeImage}
+              className="flex items-center gap-2"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Retake
+            </Button>
+            <Button
+              onClick={handleConfirmCrop}
+              className="flex items-center gap-2"
+              disabled={!crop}
+            >
+              <Check className="w-4 h-4" />
+              Confirm Crop
+            </Button>
+          </div>
+        </div>
       ) : (
         <div className="space-y-4">
           <div className="relative aspect-video rounded-lg overflow-hidden">
@@ -199,35 +274,27 @@ const CameraCapture = () => {
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="flex justify-center gap-4">
-            <Button
-              variant="outline"
-              onClick={retryCapture}
-              disabled={isLoading}
-            >
-              <RotateCcw className="mr-2 h-4 w-4" />
-              Retake
-            </Button>
-          </div>
         </div>
       )}
 
       {isLoading && (
-        <div className="flex items-center justify-center gap-2 text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Processing image...
+        <div className="flex flex-col items-center justify-center gap-4 p-6 animate-pulse">
+          <div className="relative w-16 h-16">
+            <div className="absolute inset-0 rounded-full border-4 border-sage-200 border-t-sage-600 animate-spin" />
+          </div>
+          <p className="text-muted-foreground animate-pulse">Processing image...</p>
         </div>
       )}
 
       {extractedText && (
-        <div className="p-4 rounded-lg bg-background/50 border">
+        <div className="p-4 rounded-lg bg-background/50 border animate-fadeIn">
           <h3 className="font-medium mb-2">Extracted Text:</h3>
           <p className="text-muted-foreground">{extractedText}</p>
         </div>
       )}
 
       {error && (
-        <div className="p-4 rounded-lg bg-destructive/10 border border-destructive text-destructive">
+        <div className="p-4 rounded-lg bg-destructive/10 border border-destructive text-destructive animate-shake">
           {error}
         </div>
       )}
