@@ -11,6 +11,7 @@ const CameraView = () => {
   const [crop, setCrop] = useState<Crop>();
   const [isCropping, setIsCropping] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const { toast } = useToast();
@@ -26,6 +27,7 @@ const CameraView = () => {
 
   const handleActivateCamera = async () => {
     try {
+      setIsLoading(true);
       console.log('Starting camera activation...');
       
       // Check if the browser supports getUserMedia
@@ -34,6 +36,7 @@ const CameraView = () => {
       }
 
       // Request camera access with specific constraints
+      console.log('Requesting camera access...');
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           facingMode: 'environment',
@@ -78,6 +81,8 @@ const CameraView = () => {
         description: error instanceof Error ? error.message : "Failed to access camera",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -164,11 +169,14 @@ const CameraView = () => {
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
           <button
             onClick={handleActivateCamera}
-            className="p-6 rounded-full bg-sage-100 text-sage-700 hover:bg-sage-200 transition-colors animate-glow dark:bg-sage-900 dark:text-sage-100"
+            className="p-6 rounded-full bg-sage-100 text-sage-700 hover:bg-sage-200 transition-colors animate-glow dark:bg-sage-900 dark:text-sage-100 disabled:opacity-50"
+            disabled={isLoading}
           >
             <Camera className="w-8 h-8" />
           </button>
-          <p className="text-sm text-muted-foreground">Tap to activate camera</p>
+          <p className="text-sm text-muted-foreground">
+            {isLoading ? "Activating camera..." : "Tap to activate camera"}
+          </p>
         </div>
       ) : isActive ? (
         <div className="relative h-full">
