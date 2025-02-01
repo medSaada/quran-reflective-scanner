@@ -1,5 +1,5 @@
 import { Camera, X } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { Button } from "./ui/button";
@@ -12,14 +12,29 @@ const CameraView = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
+  useEffect(() => {
+    // Cleanup function to stop the stream when component unmounts
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+
   const handleActivateCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
+        video: { 
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } 
       });
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
+        await videoRef.current.play(); // Ensure video starts playing
       }
       setIsActive(true);
     } catch (error) {
@@ -37,7 +52,7 @@ const CameraView = () => {
         ctx.drawImage(videoRef.current, 0, 0);
         const imageDataUrl = canvas.toDataURL('image/jpeg');
         setCapturedImage(imageDataUrl);
-        setIsCropping(true);
+        setIsCropping(false); // Start with preview first
         
         // Stop the camera stream
         if (streamRef.current) {
@@ -116,6 +131,7 @@ const CameraView = () => {
                 ref={videoRef}
                 autoPlay
                 playsInline
+                muted
                 className="w-full h-full object-cover"
               />
               <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
