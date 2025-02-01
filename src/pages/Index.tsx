@@ -44,12 +44,12 @@ const Index = () => {
       </div>
       <header className="space-y-2 text-center relative">
         <Button
-          variant="ghost"
+          variant="secondary"
           size="icon"
-          className="absolute left-0 top-0 hover:bg-sage-100 dark:hover:bg-sage-900"
+          className="absolute left-0 top-0 glass shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-sage-300 dark:border-sage-700"
           onClick={() => navigate('/')}
         >
-          <Home className="w-5 h-5" />
+          <Home className="w-5 h-5 text-sage-700 dark:text-sage-300" />
         </Button>
         <h1 className="text-4xl font-semibold tracking-tight text-balance bg-clip-text text-transparent bg-gradient-to-r from-sage-600 to-sand-600 dark:from-sand-400 dark:to-sand-200">
           Quran Tadabbur
@@ -88,9 +88,9 @@ const Index = () => {
           </section>
 
           <section className="space-y-4">
-            <div className="flex items-center gap-2 justify-center">
-              <Heart className="w-4 h-4 text-sage-600 animate-pulse" />
-              <h2 className="font-medium">Recent Reflections</h2>
+            <div className="flex items-center gap-2 justify-center glass px-4 py-2 rounded-full shadow-lg w-fit mx-auto">
+              <Heart className="w-5 h-5 text-sage-600 animate-pulse" />
+              <h2 className="font-medium text-lg text-sage-800 dark:text-sage-200">Recent Reflections</h2>
             </div>
             <div className="grid gap-4">
               <ReflectionCard
