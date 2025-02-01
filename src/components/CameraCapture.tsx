@@ -110,23 +110,34 @@ const CameraCapture = () => {
           return;
         }
 
-        // Get display dimensions vs natural image dimensions
-        console.log('Image dimensions:', {
+        // Find the actual displayed image element
+        const displayedImage = document.querySelector('.ReactCrop__image');
+        if (!displayedImage || !(displayedImage instanceof HTMLImageElement)) {
+          console.error('Could not find displayed image element');
+          return;
+        }
+
+        // Get the actual displayed dimensions
+        const displayWidth = displayedImage.clientWidth;
+        const displayHeight = displayedImage.clientHeight;
+
+        console.log('Dimensions:', {
           natural: {
             width: image.naturalWidth,
             height: image.naturalHeight
           },
           display: {
-            width: image.width,
-            height: image.height
-          }
+            width: displayWidth,
+            height: displayHeight
+          },
+          crop: cropData
         });
 
-        // Calculate scaling factor between displayed size and natural size
-        const scaleX = image.naturalWidth / image.width;
-        const scaleY = image.naturalHeight / image.height;
+        // Calculate scaling factors based on displayed vs natural dimensions
+        const scaleX = image.naturalWidth / displayWidth;
+        const scaleY = image.naturalHeight / displayHeight;
 
-        // Apply scaling to crop coordinates
+        // Scale the crop coordinates
         const scaledCrop = {
           x: Math.round(cropData.x * scaleX),
           y: Math.round(cropData.y * scaleY),
@@ -134,13 +145,13 @@ const CameraCapture = () => {
           height: Math.round(cropData.height * scaleY)
         };
 
-        console.log('Scaled crop dimensions:', {
+        console.log('Scaled crop:', {
           original: cropData,
           scaled: scaledCrop,
           scale: { x: scaleX, y: scaleY }
         });
 
-        // Set canvas size to match the scaled crop selection exactly
+        // Set canvas dimensions to match the crop size
         canvas.width = scaledCrop.width;
         canvas.height = scaledCrop.height;
 
@@ -152,7 +163,7 @@ const CameraCapture = () => {
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw the cropped portion with scaled coordinates
+        // Draw the cropped portion
         ctx.drawImage(
           image,
           scaledCrop.x,
@@ -165,27 +176,15 @@ const CameraCapture = () => {
           scaledCrop.height
         );
 
-        // Log final dimensions for debugging
-        console.log('Final crop dimensions:', {
-          cropSelection: cropData,
-          scaledSelection: scaledCrop,
-          canvas: {
-            width: canvas.width,
-            height: canvas.height
-          }
-        });
-        
         const croppedImageUrl = canvas.toDataURL('image/jpeg', 1.0);
         resolve(croppedImageUrl);
       };
 
-      // Handle image loading errors
       image.onerror = () => {
         console.error('Failed to load image for cropping');
-        resolve(sourceImage); // Fallback to original image
+        resolve(sourceImage);
       };
 
-      // Set crossOrigin to handle CORS if needed
       image.crossOrigin = 'anonymous';
       image.src = sourceImage;
     });
