@@ -110,44 +110,35 @@ const CameraCapture = () => {
           return;
         }
 
-        // ReactCrop gives us percentage values, so we need to convert them to pixels
-        const pixelRatio = window.devicePixelRatio || 1;
-        const scaleX = (image.naturalWidth * pixelRatio) / 100;
-        const scaleY = (image.naturalHeight * pixelRatio) / 100;
+        // Set canvas dimensions to match crop size
+        canvas.width = cropData.width;
+        canvas.height = cropData.height;
 
-        // Set the canvas size to match the crop dimensions
-        canvas.width = Math.round(cropData.width * scaleX);
-        canvas.height = Math.round(cropData.height * scaleY);
-
-        // Ensure high-quality downscaling
-        ctx.imageSmoothingQuality = 'high';
+        // Enable high quality rendering
         ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
-        // Clear the canvas before drawing (important!)
+        // Clear canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // Draw the cropped portion
         ctx.drawImage(
           image,
-          Math.round(cropData.x * scaleX),    // source x
-          Math.round(cropData.y * scaleY),    // source y
-          canvas.width,                        // source width
-          canvas.height,                       // source height
-          0,                                  // dest x
-          0,                                  // dest y
-          canvas.width,                       // dest width
-          canvas.height                       // dest height
+          cropData.x,                // source x
+          cropData.y,                // source y
+          cropData.width,            // source width
+          cropData.height,           // source height
+          0,                         // dest x
+          0,                         // dest y
+          canvas.width,              // dest width
+          canvas.height              // dest height
         );
 
         // Convert to base64 with high quality
         const croppedImageUrl = canvas.toDataURL('image/jpeg', 0.95);
-        console.log('Cropped image generated:', {
-          originalSize: {
-            width: image.naturalWidth,
-            height: image.naturalHeight
-          },
-          cropData: cropData,
-          finalSize: {
+        console.log('Crop dimensions:', {
+          crop: cropData,
+          canvas: {
             width: canvas.width,
             height: canvas.height
           }
@@ -162,8 +153,6 @@ const CameraCapture = () => {
         resolve(sourceImage); // Fallback to original image
       };
 
-      // Set crossOrigin to anonymous to avoid CORS issues with canvas
-      image.crossOrigin = 'anonymous';
       image.src = sourceImage;
     });
   };
