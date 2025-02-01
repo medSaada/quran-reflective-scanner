@@ -5,10 +5,30 @@ import CameraView from "@/components/CameraView";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { processData } from "@/utils/api";
+import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
   const [showCamera, setShowCamera] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleProcessData = async (data: any) => {
+    try {
+      const result = await processData(data);
+      toast({
+        title: "Success",
+        description: "Data processed successfully",
+      });
+      return result;
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to process data",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen p-6 space-y-8 animate-fadeIn pattern-bg">
