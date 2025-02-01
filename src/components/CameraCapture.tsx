@@ -110,13 +110,39 @@ const CameraCapture = () => {
           return;
         }
 
-        // Get the actual dimensions of the crop selection
-        const cropWidth = cropData.width;
-        const cropHeight = cropData.height;
+        // Get display dimensions vs natural image dimensions
+        console.log('Image dimensions:', {
+          natural: {
+            width: image.naturalWidth,
+            height: image.naturalHeight
+          },
+          display: {
+            width: image.width,
+            height: image.height
+          }
+        });
 
-        // Set canvas size to match the crop selection exactly
-        canvas.width = cropWidth;
-        canvas.height = cropHeight;
+        // Calculate scaling factor between displayed size and natural size
+        const scaleX = image.naturalWidth / image.width;
+        const scaleY = image.naturalHeight / image.height;
+
+        // Apply scaling to crop coordinates
+        const scaledCrop = {
+          x: Math.round(cropData.x * scaleX),
+          y: Math.round(cropData.y * scaleY),
+          width: Math.round(cropData.width * scaleX),
+          height: Math.round(cropData.height * scaleY)
+        };
+
+        console.log('Scaled crop dimensions:', {
+          original: cropData,
+          scaled: scaledCrop,
+          scale: { x: scaleX, y: scaleY }
+        });
+
+        // Set canvas size to match the scaled crop selection exactly
+        canvas.width = scaledCrop.width;
+        canvas.height = scaledCrop.height;
 
         // Enable high quality rendering
         ctx.imageSmoothingEnabled = true;
@@ -126,22 +152,23 @@ const CameraCapture = () => {
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw the cropped portion exactly as selected
+        // Draw the cropped portion with scaled coordinates
         ctx.drawImage(
           image,
-          cropData.x,                // source x - exact pixel from selection
-          cropData.y,                // source y - exact pixel from selection
-          cropWidth,                 // source width - exact selected width
-          cropHeight,                // source height - exact selected height
-          0,                         // destination x
-          0,                         // destination y
-          cropWidth,                 // destination width - maintain selected size
-          cropHeight                 // destination height - maintain selected size
+          scaledCrop.x,
+          scaledCrop.y,
+          scaledCrop.width,
+          scaledCrop.height,
+          0,
+          0,
+          scaledCrop.width,
+          scaledCrop.height
         );
 
-        // Log dimensions for debugging
-        console.log('Crop dimensions:', {
-          selection: cropData,
+        // Log final dimensions for debugging
+        console.log('Final crop dimensions:', {
+          cropSelection: cropData,
+          scaledSelection: scaledCrop,
           canvas: {
             width: canvas.width,
             height: canvas.height
@@ -158,6 +185,8 @@ const CameraCapture = () => {
         resolve(sourceImage); // Fallback to original image
       };
 
+      // Set crossOrigin to handle CORS if needed
+      image.crossOrigin = 'anonymous';
       image.src = sourceImage;
     });
   };
