@@ -29,6 +29,12 @@ const CameraView = () => {
       setIsLoading(true);
       console.log('Starting camera activation...');
       
+      // Check if video element exists before proceeding
+      if (!videoRef.current) {
+        console.error('Video element reference is null');
+        throw new Error('Video element not found');
+      }
+
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Camera access is not supported by this browser');
       }
@@ -44,50 +50,36 @@ const CameraView = () => {
       
       console.log('Camera permission granted, setting up video stream...');
 
-      if (!videoRef.current) {
-        throw new Error('Video element not found');
-      }
-
-      // Set the stream as the video source
+      // Set up video element
       videoRef.current.srcObject = stream;
       streamRef.current = stream;
-
-      // Wait for the video to be ready
-      await new Promise<void>((resolve, reject) => {
-        if (!videoRef.current) return reject('Video element not found');
-        
-        videoRef.current.onloadedmetadata = () => {
-          console.log('Video metadata loaded');
-          if (videoRef.current) {
-            videoRef.current.play()
-              .then(() => {
-                console.log('Video playback started');
-                resolve();
-              })
-              .catch(error => {
-                console.error('Error starting video playback:', error);
-                reject(error);
+      
+      // Ensure video element is ready before playing
+      videoRef.current.onloadedmetadata = () => {
+        console.log('Video metadata loaded');
+        if (videoRef.current) {
+          videoRef.current.play()
+            .then(() => {
+              console.log('Video playback started successfully');
+              setIsActive(true);
+              toast({
+                title: "Camera activated",
+                description: "You can now take a picture",
               });
-          }
-        };
+            })
+            .catch(error => {
+              console.error('Error starting video playback:', error);
+              throw new Error('Failed to start video playback');
+            });
+        }
+      };
 
-        // Add error handling for video element
-        videoRef.current.onerror = (event) => {
-          console.error('Video element error:', event);
-          reject(new Error('Failed to load video'));
-        };
+      // Add error handler for video element
+      videoRef.current.onerror = (event) => {
+        console.error('Video element error:', event);
+        throw new Error('Video element error occurred');
+      };
 
-        // Add timeout to prevent hanging
-        setTimeout(() => {
-          reject(new Error('Video stream setup timed out'));
-        }, 10000);
-      });
-
-      setIsActive(true);
-      toast({
-        title: "Camera activated",
-        description: "You can now take a picture",
-      });
     } catch (error) {
       console.error("Error accessing camera:", error);
       toast({
@@ -103,6 +95,7 @@ const CameraView = () => {
       if (videoRef.current) {
         videoRef.current.srcObject = null;
       }
+      setIsActive(false);
     } finally {
       setIsLoading(false);
     }
@@ -220,6 +213,7 @@ const CameraView = () => {
           </div>
         </div>
       ) : isPreview && capturedImage ? (
+        // ... keep existing code (preview section)
         <div className="relative h-full">
           <img
             src={capturedImage}
@@ -243,6 +237,7 @@ const CameraView = () => {
           </div>
         </div>
       ) : capturedImage && isCropping ? (
+        // ... keep existing code (cropping section)
         <div className="relative h-full">
           <ReactCrop
             crop={crop}
