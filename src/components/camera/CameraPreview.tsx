@@ -10,9 +10,19 @@ export const CameraPreview = ({ stream, onCapture }: CameraPreviewProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    if (videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
+    const videoElement = videoRef.current;
+    if (videoElement && stream) {
+      videoElement.srcObject = stream;
+      videoElement.play().catch(error => {
+        console.error('Error playing video:', error);
+      });
     }
+
+    return () => {
+      if (videoElement) {
+        videoElement.srcObject = null;
+      }
+    };
   }, [stream]);
 
   const handleCapture = () => {
@@ -30,21 +40,23 @@ export const CameraPreview = ({ stream, onCapture }: CameraPreviewProps) => {
   };
 
   return (
-    <div className="relative h-full">
+    <div className="relative h-full flex flex-col items-center justify-center">
       <video
         ref={videoRef}
         autoPlay
         playsInline
         muted
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover rounded-xl"
+        style={{ transform: 'scaleX(-1)' }} // Mirror effect
       />
       <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
         <Button
           onClick={handleCapture}
           variant="secondary"
-          className="rounded-full w-12 h-12 p-0 bg-white/80"
+          size="lg"
+          className="rounded-full w-16 h-16 p-0 bg-white/80 hover:bg-white/90 transition-colors"
         >
-          <div className="w-8 h-8 rounded-full border-2 border-sage-600" />
+          <div className="w-12 h-12 rounded-full border-4 border-sage-600" />
         </Button>
       </div>
     </div>
