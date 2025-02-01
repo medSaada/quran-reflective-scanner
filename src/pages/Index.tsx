@@ -1,7 +1,7 @@
 import { Book, Camera, Heart, Home } from "lucide-react";
 import ActionCard from "@/components/ActionCard";
 import ReflectionCard from "@/components/ReflectionCard";
-import CameraView from "@/components/CameraView";
+import CameraCapture from "@/components/CameraCapture";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -57,7 +57,7 @@ const Index = () => {
           >
             ← Back to home
           </button>
-          <CameraView />
+          <CameraCapture />
         </div>
       ) : (
         <main className="space-y-8 max-w-2xl mx-auto">
