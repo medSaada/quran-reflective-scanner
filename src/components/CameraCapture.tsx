@@ -102,27 +102,41 @@ const CameraCapture = () => {
     return new Promise((resolve) => {
       const image = new Image();
       image.src = sourceImage;
+      
       image.onload = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        canvas.width = cropData.width;
-        canvas.height = cropData.height;
+        // Calculate the pixel values from percentages
+        const scaleX = image.naturalWidth / 100;
+        const scaleY = image.naturalHeight / 100;
 
+        const pixelCrop = {
+          x: cropData.x * scaleX,
+          y: cropData.y * scaleY,
+          width: cropData.width * scaleX,
+          height: cropData.height * scaleY
+        };
+
+        // Set canvas size to match the cropped area exactly
+        canvas.width = pixelCrop.width;
+        canvas.height = pixelCrop.height;
+
+        // Draw the cropped image
         ctx.drawImage(
           image,
-          cropData.x,
-          cropData.y,
-          cropData.width,
-          cropData.height,
+          pixelCrop.x,
+          pixelCrop.y,
+          pixelCrop.width,
+          pixelCrop.height,
           0,
           0,
-          cropData.width,
-          cropData.height
+          pixelCrop.width,
+          pixelCrop.height
         );
 
-        resolve(canvas.toDataURL('image/jpeg'));
+        resolve(canvas.toDataURL('image/jpeg', 0.95));
       };
     });
   };
