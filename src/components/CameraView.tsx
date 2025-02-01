@@ -25,11 +25,8 @@ const CameraView = () => {
     };
   }, []);
 
-  const handleActivateCamera = async () => {
+  const initializeCamera = async () => {
     try {
-      setIsLoading(true);
-      console.log('Starting camera activation...');
-
       // Check browser support first
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Camera access is not supported by this browser');
@@ -43,49 +40,59 @@ const CameraView = () => {
           height: { ideal: 720 }
         } 
       });
-      
-      console.log('Camera permission granted, setting up video stream...');
 
-      // Ensure video element exists
+      // Store stream reference
+      streamRef.current = stream;
+      
+      return stream;
+    } catch (error) {
+      console.error('Error initializing camera:', error);
+      throw error;
+    }
+  };
+
+  const setupVideoElement = async (stream: MediaStream) => {
+    return new Promise<void>((resolve, reject) => {
       if (!videoRef.current) {
-        throw new Error('Video element not found');
+        reject(new Error('Video element not found'));
+        return;
       }
 
-      // Store stream reference first
-      streamRef.current = stream;
+      const video = videoRef.current;
+      video.srcObject = stream;
 
-      // Set up video element with the stream
-      videoRef.current.srcObject = stream;
-      
-      // Create a promise to handle video loading
-      await new Promise((resolve, reject) => {
-        if (!videoRef.current) {
-          reject(new Error('Video element not found'));
-          return;
+      const timeoutId = setTimeout(() => {
+        reject(new Error('Video loading timed out'));
+      }, 10000);
+
+      video.onloadedmetadata = async () => {
+        clearTimeout(timeoutId);
+        try {
+          await video.play();
+          resolve();
+        } catch (error) {
+          reject(new Error('Failed to start video playback'));
         }
+      };
 
-        const timeoutId = setTimeout(() => {
-          reject(new Error('Video loading timed out'));
-        }, 10000);
+      video.onerror = () => {
+        clearTimeout(timeoutId);
+        reject(new Error('Video element error occurred'));
+      };
+    });
+  };
 
-        videoRef.current.onloadedmetadata = async () => {
-          clearTimeout(timeoutId);
-          try {
-            await videoRef.current?.play();
-            console.log('Video playback started successfully');
-            setIsActive(true);
-            resolve(true);
-          } catch (error) {
-            reject(new Error('Failed to start video playback'));
-          }
-        };
+  const handleActivateCamera = async () => {
+    try {
+      setIsLoading(true);
+      console.log('Starting camera activation...');
 
-        videoRef.current.onerror = () => {
-          clearTimeout(timeoutId);
-          reject(new Error('Video element error occurred'));
-        };
-      });
-
+      const stream = await initializeCamera();
+      await setupVideoElement(stream);
+      
+      console.log('Camera setup completed successfully');
+      setIsActive(true);
+      
       toast({
         title: "Camera activated",
         description: "You can now take a picture",
