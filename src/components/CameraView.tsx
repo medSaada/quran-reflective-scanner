@@ -33,7 +33,6 @@ const CameraView = () => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
-        await videoRef.current.play();
       }
       setIsActive(true);
     } catch (error) {
@@ -51,13 +50,13 @@ const CameraView = () => {
         ctx.drawImage(videoRef.current, 0, 0);
         const imageDataUrl = canvas.toDataURL('image/jpeg');
         setCapturedImage(imageDataUrl);
-        setIsCropping(true); // Immediately show cropping interface after capture
+        setIsCropping(true);
         
         // Stop the camera stream
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(track => track.stop());
         }
-        setIsActive(false); // Hide camera view
+        setIsActive(false);
       }
     }
   };
