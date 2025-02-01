@@ -110,40 +110,45 @@ const CameraCapture = () => {
           return;
         }
 
-        // Set canvas dimensions to match crop size
-        canvas.width = cropData.width;
-        canvas.height = cropData.height;
+        // Get the actual dimensions of the crop selection
+        const cropWidth = cropData.width;
+        const cropHeight = cropData.height;
+
+        // Set canvas size to match the crop selection exactly
+        canvas.width = cropWidth;
+        canvas.height = cropHeight;
 
         // Enable high quality rendering
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
-        // Clear canvas
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Clear canvas and ensure proper background
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw the cropped portion
+        // Draw the cropped portion exactly as selected
         ctx.drawImage(
           image,
-          cropData.x,                // source x
-          cropData.y,                // source y
-          cropData.width,            // source width
-          cropData.height,           // source height
-          0,                         // dest x
-          0,                         // dest y
-          canvas.width,              // dest width
-          canvas.height              // dest height
+          cropData.x,                // source x - exact pixel from selection
+          cropData.y,                // source y - exact pixel from selection
+          cropWidth,                 // source width - exact selected width
+          cropHeight,                // source height - exact selected height
+          0,                         // destination x
+          0,                         // destination y
+          cropWidth,                 // destination width - maintain selected size
+          cropHeight                 // destination height - maintain selected size
         );
 
-        // Convert to base64 with high quality
-        const croppedImageUrl = canvas.toDataURL('image/jpeg', 0.95);
+        // Log dimensions for debugging
         console.log('Crop dimensions:', {
-          crop: cropData,
+          selection: cropData,
           canvas: {
             width: canvas.width,
             height: canvas.height
           }
         });
         
+        const croppedImageUrl = canvas.toDataURL('image/jpeg', 1.0);
         resolve(croppedImageUrl);
       };
 
