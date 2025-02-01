@@ -110,74 +110,78 @@ const CameraCapture = () => {
           return;
         }
 
-        // Find the actual displayed image element
-        const displayedImage = document.querySelector('.ReactCrop__image');
-        if (!displayedImage || !(displayedImage instanceof HTMLImageElement)) {
-          console.error('Could not find displayed image element');
-          return;
-        }
+        // Wait for next frame to ensure image is rendered
+        requestAnimationFrame(() => {
+          // Find the actual displayed image element
+          const displayedImage = document.querySelector('.ReactCrop__image');
+          if (!displayedImage || !(displayedImage instanceof HTMLImageElement)) {
+            console.error('Could not find displayed image element');
+            resolve(sourceImage); // Fallback to original
+            return;
+          }
 
-        // Get the actual displayed dimensions
-        const displayWidth = displayedImage.clientWidth;
-        const displayHeight = displayedImage.clientHeight;
+          // Get the actual displayed dimensions
+          const displayWidth = displayedImage.clientWidth;
+          const displayHeight = displayedImage.clientHeight;
 
-        console.log('Dimensions:', {
-          natural: {
-            width: image.naturalWidth,
-            height: image.naturalHeight
-          },
-          display: {
-            width: displayWidth,
-            height: displayHeight
-          },
-          crop: cropData
+          console.log('Dimensions:', {
+            natural: {
+              width: image.naturalWidth,
+              height: image.naturalHeight
+            },
+            display: {
+              width: displayWidth,
+              height: displayHeight
+            },
+            crop: cropData
+          });
+
+          // Calculate scaling factors based on displayed vs natural dimensions
+          const scaleX = image.naturalWidth / displayWidth;
+          const scaleY = image.naturalHeight / displayHeight;
+
+          // Scale the crop coordinates
+          const scaledCrop = {
+            x: Math.round(cropData.x * scaleX),
+            y: Math.round(cropData.y * scaleY),
+            width: Math.round(cropData.width * scaleX),
+            height: Math.round(cropData.height * scaleY)
+          };
+
+          console.log('Scaled crop:', {
+            original: cropData,
+            scaled: scaledCrop,
+            scale: { x: scaleX, y: scaleY }
+          });
+
+          // Set canvas dimensions to match the crop size
+          canvas.width = scaledCrop.width;
+          canvas.height = scaledCrop.height;
+
+          // Enable high quality rendering
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+
+          // Clear canvas and ensure proper background
+          ctx.fillStyle = 'white';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // Draw the cropped portion
+          ctx.drawImage(
+            image,
+            scaledCrop.x,
+            scaledCrop.y,
+            scaledCrop.width,
+            scaledCrop.height,
+            0,
+            0,
+            scaledCrop.width,
+            scaledCrop.height
+          );
+
+          const croppedImageUrl = canvas.toDataURL('image/jpeg', 1.0);
+          resolve(croppedImageUrl);
         });
-
-        // Calculate scaling factors based on displayed vs natural dimensions
-        const scaleX = image.naturalWidth / displayWidth;
-        const scaleY = image.naturalHeight / displayHeight;
-
-        // Scale the crop coordinates
-        const scaledCrop = {
-          x: Math.round(cropData.x * scaleX),
-          y: Math.round(cropData.y * scaleY),
-          width: Math.round(cropData.width * scaleX),
-          height: Math.round(cropData.height * scaleY)
-        };
-
-        console.log('Scaled crop:', {
-          original: cropData,
-          scaled: scaledCrop,
-          scale: { x: scaleX, y: scaleY }
-        });
-
-        // Set canvas dimensions to match the crop size
-        canvas.width = scaledCrop.width;
-        canvas.height = scaledCrop.height;
-
-        // Enable high quality rendering
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-
-        // Clear canvas and ensure proper background
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Draw the cropped portion
-        ctx.drawImage(
-          image,
-          scaledCrop.x,
-          scaledCrop.y,
-          scaledCrop.width,
-          scaledCrop.height,
-          0,
-          0,
-          scaledCrop.width,
-          scaledCrop.height
-        );
-
-        const croppedImageUrl = canvas.toDataURL('image/jpeg', 1.0);
-        resolve(croppedImageUrl);
       };
 
       image.onerror = () => {
