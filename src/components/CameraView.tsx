@@ -16,7 +16,6 @@ const CameraView = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const { toast } = useToast();
 
-  // Cleanup function to stop the camera stream when component unmounts
   useEffect(() => {
     return () => {
       if (streamRef.current) {
@@ -30,12 +29,10 @@ const CameraView = () => {
       setIsLoading(true);
       console.log('Starting camera activation...');
       
-      // Check if the browser supports getUserMedia
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Camera access is not supported by this browser');
       }
 
-      // Request camera access with specific constraints
       console.log('Requesting camera access...');
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
@@ -51,24 +48,41 @@ const CameraView = () => {
         throw new Error('Video element not found');
       }
 
-      // Set up video element with the stream
+      // Set the stream as the video source
       videoRef.current.srcObject = stream;
       streamRef.current = stream;
 
-      // Wait for the video to be ready to play
-      await new Promise((resolve) => {
-        if (videoRef.current) {
-          videoRef.current.onloadedmetadata = () => {
-            console.log('Video metadata loaded');
-            resolve(true);
-          };
-        }
+      // Wait for the video to be ready
+      await new Promise<void>((resolve, reject) => {
+        if (!videoRef.current) return reject('Video element not found');
+        
+        videoRef.current.onloadedmetadata = () => {
+          console.log('Video metadata loaded');
+          if (videoRef.current) {
+            videoRef.current.play()
+              .then(() => {
+                console.log('Video playback started');
+                resolve();
+              })
+              .catch(error => {
+                console.error('Error starting video playback:', error);
+                reject(error);
+              });
+          }
+        };
+
+        // Add error handling for video element
+        videoRef.current.onerror = (event) => {
+          console.error('Video element error:', event);
+          reject(new Error('Failed to load video'));
+        };
+
+        // Add timeout to prevent hanging
+        setTimeout(() => {
+          reject(new Error('Video stream setup timed out'));
+        }, 10000);
       });
 
-      // Start playing the video
-      await videoRef.current.play();
-      console.log('Camera activated successfully');
-      
       setIsActive(true);
       toast({
         title: "Camera activated",
@@ -81,6 +95,14 @@ const CameraView = () => {
         description: error instanceof Error ? error.message : "Failed to access camera",
         variant: "destructive",
       });
+      
+      // Cleanup on error
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
     } finally {
       setIsLoading(false);
     }
