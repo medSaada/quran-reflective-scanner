@@ -101,54 +101,90 @@ const CameraCapture = () => {
   const getCroppedImage = (sourceImage: string, cropData: Crop): Promise<string> => {
     return new Promise((resolve) => {
       const image = new Image();
-      image.src = sourceImage;
       
       image.onload = () => {
-        // Create canvas with original image dimensions
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+        if (!ctx) {
+          console.error('Failed to get canvas context');
+          return;
+        }
 
-        // Calculate actual pixel values from percentages
-        const scaleX = image.naturalWidth / 100;
-        const scaleY = image.naturalHeight / 100;
+        // ReactCrop gives us percentage values, so we need to convert them to pixels
+        const pixelRatio = window.devicePixelRatio || 1;
+        const scaleX = (image.naturalWidth * pixelRatio) / 100;
+        const scaleY = (image.naturalHeight * pixelRatio) / 100;
 
-        // Convert crop percentages to pixels
-        const pixelCrop = {
-          x: Math.round(cropData.x * scaleX),
-          y: Math.round(cropData.y * scaleY),
-          width: Math.round(cropData.width * scaleX),
-          height: Math.round(cropData.height * scaleY)
-        };
+        // Set the canvas size to match the crop dimensions
+        canvas.width = Math.round(cropData.width * scaleX);
+        canvas.height = Math.round(cropData.height * scaleY);
 
-        // Set canvas size to the cropped dimensions
-        canvas.width = pixelCrop.width;
-        canvas.height = pixelCrop.height;
+        // Ensure high-quality downscaling
+        ctx.imageSmoothingQuality = 'high';
+        ctx.imageSmoothingEnabled = true;
 
-        // First draw the cropped portion
+        // Clear the canvas before drawing (important!)
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the cropped portion
         ctx.drawImage(
           image,
-          pixelCrop.x,
-          pixelCrop.y,
-          pixelCrop.width,
-          pixelCrop.height,
-          0,
-          0,
-          pixelCrop.width,
-          pixelCrop.height
+          Math.round(cropData.x * scaleX),    // source x
+          Math.round(cropData.y * scaleY),    // source y
+          canvas.width,                        // source width
+          canvas.height,                       // source height
+          0,                                  // dest x
+          0,                                  // dest y
+          canvas.width,                       // dest width
+          canvas.height                       // dest height
         );
 
-        resolve(canvas.toDataURL('image/jpeg', 0.95));
+        // Convert to base64 with high quality
+        const croppedImageUrl = canvas.toDataURL('image/jpeg', 0.95);
+        console.log('Cropped image generated:', {
+          originalSize: {
+            width: image.naturalWidth,
+            height: image.naturalHeight
+          },
+          cropData: cropData,
+          finalSize: {
+            width: canvas.width,
+            height: canvas.height
+          }
+        });
+        
+        resolve(croppedImageUrl);
       };
+
+      // Handle image loading errors
+      image.onerror = () => {
+        console.error('Failed to load image for cropping');
+        resolve(sourceImage); // Fallback to original image
+      };
+
+      // Set crossOrigin to anonymous to avoid CORS issues with canvas
+      image.crossOrigin = 'anonymous';
+      image.src = sourceImage;
     });
   };
 
   const handleConfirmCrop = async () => {
     if (capturedImage && crop) {
-      const croppedImageUrl = await getCroppedImage(capturedImage, crop);
-      setCroppedImage(croppedImageUrl);
-      setIsCropping(false);
-      processImage(croppedImageUrl);
+      try {
+        console.log('Starting crop with data:', crop);
+        const croppedImageUrl = await getCroppedImage(capturedImage, crop);
+        console.log('Crop successful, setting cropped image');
+        setCroppedImage(croppedImageUrl);
+        setIsCropping(false);
+        processImage(croppedImageUrl);
+      } catch (error) {
+        console.error('Error during crop:', error);
+        toast({
+          variant: "destructive",
+          title: "Cropping Error",
+          description: "Failed to crop image. Please try again.",
+        });
+      }
     }
   };
 
