@@ -16,6 +16,7 @@ const CameraView = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const { toast } = useToast();
 
+  // Cleanup function
   useEffect(() => {
     return () => {
       if (streamRef.current) {
@@ -28,13 +29,8 @@ const CameraView = () => {
     try {
       setIsLoading(true);
       console.log('Starting camera activation...');
-      
-      // Check if video element exists before proceeding
-      if (!videoRef.current) {
-        console.error('Video element reference is null');
-        throw new Error('Video element not found');
-      }
 
+      // Check browser support first
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Camera access is not supported by this browser');
       }
@@ -50,35 +46,50 @@ const CameraView = () => {
       
       console.log('Camera permission granted, setting up video stream...');
 
-      // Set up video element
-      videoRef.current.srcObject = stream;
-      streamRef.current = stream;
-      
-      // Ensure video element is ready before playing
-      videoRef.current.onloadedmetadata = () => {
-        console.log('Video metadata loaded');
-        if (videoRef.current) {
-          videoRef.current.play()
-            .then(() => {
-              console.log('Video playback started successfully');
-              setIsActive(true);
-              toast({
-                title: "Camera activated",
-                description: "You can now take a picture",
-              });
-            })
-            .catch(error => {
-              console.error('Error starting video playback:', error);
-              throw new Error('Failed to start video playback');
-            });
-        }
-      };
+      // Ensure video element exists
+      if (!videoRef.current) {
+        throw new Error('Video element not found');
+      }
 
-      // Add error handler for video element
-      videoRef.current.onerror = (event) => {
-        console.error('Video element error:', event);
-        throw new Error('Video element error occurred');
-      };
+      // Store stream reference first
+      streamRef.current = stream;
+
+      // Set up video element with the stream
+      videoRef.current.srcObject = stream;
+      
+      // Create a promise to handle video loading
+      await new Promise((resolve, reject) => {
+        if (!videoRef.current) {
+          reject(new Error('Video element not found'));
+          return;
+        }
+
+        const timeoutId = setTimeout(() => {
+          reject(new Error('Video loading timed out'));
+        }, 10000);
+
+        videoRef.current.onloadedmetadata = async () => {
+          clearTimeout(timeoutId);
+          try {
+            await videoRef.current?.play();
+            console.log('Video playback started successfully');
+            setIsActive(true);
+            resolve(true);
+          } catch (error) {
+            reject(new Error('Failed to start video playback'));
+          }
+        };
+
+        videoRef.current.onerror = () => {
+          clearTimeout(timeoutId);
+          reject(new Error('Video element error occurred'));
+        };
+      });
+
+      toast({
+        title: "Camera activated",
+        description: "You can now take a picture",
+      });
 
     } catch (error) {
       console.error("Error accessing camera:", error);
