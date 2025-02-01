@@ -130,33 +130,61 @@ const CameraView = () => {
             </>
           ) : (
             <div className="relative h-full">
-              <ReactCrop
-                crop={crop}
-                onChange={c => setCrop(c)}
-                className="h-full"
-              >
-                <img
-                  src={capturedImage}
-                  alt="Captured"
-                  className="max-h-full w-full object-contain"
-                />
-              </ReactCrop>
-              <div className="absolute top-4 right-4 flex gap-2">
-                <Button
-                  onClick={handleReset}
-                  variant="destructive"
-                  size="icon"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-                <Button
-                  onClick={handleSaveCrop}
-                  variant="default"
-                  className="bg-sage-600 hover:bg-sage-700"
-                >
-                  Save Crop
-                </Button>
-              </div>
+              {isCropping ? (
+                <>
+                  <ReactCrop
+                    crop={crop}
+                    onChange={c => setCrop(c)}
+                    className="h-full"
+                  >
+                    <img
+                      src={capturedImage}
+                      alt="Captured"
+                      className="max-h-full w-full object-contain"
+                    />
+                  </ReactCrop>
+                  <div className="absolute top-4 right-4 flex gap-2">
+                    <Button
+                      onClick={handleReset}
+                      variant="destructive"
+                      size="icon"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      onClick={handleSaveCrop}
+                      variant="default"
+                      className="bg-sage-600 hover:bg-sage-700"
+                    >
+                      Save Crop
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="relative h-full">
+                  <img
+                    src={capturedImage}
+                    alt="Preview"
+                    className="w-full h-full object-contain"
+                  />
+                  <div className="absolute top-4 right-4 flex gap-2">
+                    <Button
+                      onClick={handleReset}
+                      variant="destructive"
+                      size="icon"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      onClick={() => setIsCropping(true)}
+                      variant="default"
+                      className="bg-sage-600 hover:bg-sage-700"
+                    >
+                      Crop Image
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
