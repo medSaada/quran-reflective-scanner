@@ -26,58 +26,60 @@ const CameraView = () => {
   }, []);
 
   const initializeCamera = async () => {
-    try {
-      // Check browser support first
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Camera access is not supported by this browser');
-      }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('Camera access is not supported by this browser');
+    }
 
+    try {
       console.log('Requesting camera access...');
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
+      const constraints = {
+        video: {
           facingMode: 'environment',
           width: { ideal: 1280 },
           height: { ideal: 720 }
-        } 
-      });
+        }
+      };
 
-      // Store stream reference
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
-      
       return stream;
     } catch (error) {
-      console.error('Error initializing camera:', error);
+      console.error('Error accessing camera:', error);
       throw error;
     }
   };
 
   const setupVideoElement = async (stream: MediaStream) => {
     return new Promise<void>((resolve, reject) => {
-      if (!videoRef.current) {
+      const video = videoRef.current;
+      if (!video) {
         reject(new Error('Video element not found'));
         return;
       }
 
-      const video = videoRef.current;
       video.srcObject = stream;
+      video.onloadedmetadata = () => {
+        video.play()
+          .then(() => resolve())
+          .catch(error => {
+            console.error('Error playing video:', error);
+            reject(error);
+          });
+      };
 
+      video.onerror = (event) => {
+        console.error('Video element error:', event);
+        reject(new Error('Video element error occurred'));
+      };
+
+      // Set a timeout to prevent hanging
       const timeoutId = setTimeout(() => {
         reject(new Error('Video loading timed out'));
       }, 10000);
 
-      video.onloadedmetadata = async () => {
+      // Clear timeout if video loads successfully
+      video.onplaying = () => {
         clearTimeout(timeoutId);
-        try {
-          await video.play();
-          resolve();
-        } catch (error) {
-          reject(new Error('Failed to start video playback'));
-        }
-      };
-
-      video.onerror = () => {
-        clearTimeout(timeoutId);
-        reject(new Error('Video element error occurred'));
       };
     });
   };
@@ -90,16 +92,13 @@ const CameraView = () => {
       const stream = await initializeCamera();
       await setupVideoElement(stream);
       
-      console.log('Camera setup completed successfully');
       setIsActive(true);
-      
       toast({
         title: "Camera activated",
         description: "You can now take a picture",
       });
-
     } catch (error) {
-      console.error("Error accessing camera:", error);
+      console.error("Camera activation error:", error);
       toast({
         title: "Camera Error",
         description: error instanceof Error ? error.message : "Failed to access camera",
@@ -231,7 +230,6 @@ const CameraView = () => {
           </div>
         </div>
       ) : isPreview && capturedImage ? (
-        // ... keep existing code (preview section)
         <div className="relative h-full">
           <img
             src={capturedImage}
@@ -255,7 +253,6 @@ const CameraView = () => {
           </div>
         </div>
       ) : capturedImage && isCropping ? (
-        // ... keep existing code (cropping section)
         <div className="relative h-full">
           <ReactCrop
             crop={crop}
