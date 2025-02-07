@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { useImageProcessing } from "@/components/camera/hooks/useImageProcessing";
 import { useToast } from "@/components/ui/use-toast";
 import { Language } from "@/types/language";
+import { processData } from "@/utils/api";
 
 const WaitingPage = () => {
   const navigate = useNavigate();
@@ -13,17 +14,27 @@ const WaitingPage = () => {
   const { processImage } = useImageProcessing();
   
   const imageData = location.state?.imageData;
+  const ayahText = location.state?.ayahText;
   const language = location.state?.language as Language;
 
   useEffect(() => {
-    const processData = async () => {
-      if (!imageData) {
+    const processContent = async () => {
+      if (!imageData && !ayahText) {
         navigate("/home");
         return;
       }
 
       try {
-        const result = await processImage(imageData);
+        let result;
+        if (imageData) {
+          result = await processImage(imageData);
+        } else {
+          result = await processData({ 
+            text: ayahText, 
+            language: language || 'Arabic'
+          });
+        }
+
         navigate("/results", { 
           state: { 
             result,
@@ -31,20 +42,20 @@ const WaitingPage = () => {
           }
         });
       } catch (error) {
-        console.error('Error processing image:', error);
+        console.error('Error processing content:', error);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to process image. Please try again.",
+          description: "Failed to process content. Please try again.",
         });
         navigate("/home");
       }
     };
 
-    processData();
-  }, [imageData, language, navigate, processImage, toast]);
+    processContent();
+  }, [imageData, ayahText, language, navigate, processImage, toast]);
 
-  if (!imageData) {
+  if (!imageData && !ayahText) {
     navigate("/home");
     return null;
   }
@@ -56,7 +67,7 @@ const WaitingPage = () => {
         
         <div className="text-center space-y-4 relative z-10">
           <h1 className="text-2xl font-semibold text-sage-800 dark:text-sage-200">
-            Processing Your Ayah
+            {imageData ? "Processing Your Ayah" : "Processing Your Text"}
           </h1>
           
           <div className="relative w-32 h-32 mx-auto">
