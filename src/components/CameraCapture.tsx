@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
@@ -310,18 +311,18 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
             style={{ transform: 'scaleX(-1)' }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 transform">
             <Button
               onClick={captureImage}
-              size="lg"
-              className="rounded-full w-16 h-16 bg-sage-500/90 hover:bg-sage-600/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+              size="icon"
+              className="rounded-full w-12 h-12 bg-white/90 hover:bg-white/100 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-sage-300/50"
               disabled={isLoading || !stream}
             >
-              <Camera className="w-8 h-8 text-white" />
+              <Camera className="w-5 h-5 text-sage-800" />
             </Button>
           </div>
-          <div className="absolute top-4 left-4 text-white/80 font-medium">
-            Selected Language: {selectedLanguage}
+          <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 text-sm font-medium">
+            {selectedLanguage}
           </div>
         </div>
       ) : isCropping ? (
@@ -407,3 +408,4 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
 };
 
 export default CameraCapture;
+
