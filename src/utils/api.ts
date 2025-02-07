@@ -1,5 +1,5 @@
 
-const API_URL = "https://api.lovableproject.com/process-text/";
+const API_URL = "http://127.0.0.1:8000/process-text/";
 
 interface ProcessDataParams {
   text: string;
