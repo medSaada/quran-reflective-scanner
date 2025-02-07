@@ -10,6 +10,7 @@ import { useCamera } from "./camera/hooks/useCamera";
 import { useImageProcessing } from "./camera/hooks/useImageProcessing";
 import { useImageCropping } from "./camera/hooks/useImageCropping";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 interface CameraCaptureProps {
   selectedLanguage: Language;
@@ -17,9 +18,10 @@ interface CameraCaptureProps {
 
 const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const { stream, error: cameraError, permissionState, initializeCamera } = useCamera();
-  const { isLoading, error: processingError, extractedText, processImage } = useImageProcessing();
+  const { isLoading, error: processingError, processImage } = useImageProcessing();
   const {
     capturedImage,
     setCapturedImage,
@@ -58,6 +60,11 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
         setIsCropping(false);
       } catch (error) {
         console.error('Error during crop:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to crop image. Please try again.",
+        });
       }
     }
   };
@@ -65,15 +72,20 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
   const handleConfirmImage = async () => {
     if (croppedImage) {
       try {
-        await processImage(croppedImage);
+        // Navigate to waiting page first
         navigate("/waiting", { 
           state: { 
-            ayahText: extractedText,
+            imageData: croppedImage,
             language: selectedLanguage 
           }
         });
       } catch (error) {
         console.error('Error processing image:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to process image. Please try again.",
+        });
       }
     }
   };

@@ -2,41 +2,52 @@
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
-import { processData } from "@/utils/api";
-import { useToast } from "@/hooks/use-toast";
+import { useImageProcessing } from "@/components/camera/hooks/useImageProcessing";
+import { useToast } from "@/components/ui/use-toast";
 import { Language } from "@/types/language";
 
 const WaitingPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const ayahText = location.state?.ayahText;
+  const { processImage } = useImageProcessing();
+  
+  const imageData = location.state?.imageData;
   const language = location.state?.language as Language;
 
   useEffect(() => {
-    const processAyah = async () => {
+    const processData = async () => {
+      if (!imageData) {
+        navigate("/home");
+        return;
+      }
+
       try {
-        const result = await processData({ 
-          text: ayahText,
-          language: language || "Arabic"
+        const result = await processImage(imageData);
+        navigate("/results", { 
+          state: { 
+            result,
+            language 
+          }
         });
-        navigate("/results", { state: { result, language } });
       } catch (error) {
+        console.error('Error processing image:', error);
         toast({
-          title: "Error",
-          description: "Failed to process ayah. Please try again.",
           variant: "destructive",
+          title: "Error",
+          description: "Failed to process image. Please try again.",
         });
         navigate("/home");
       }
     };
 
-    if (ayahText) {
-      processAyah();
-    } else {
-      navigate("/home");
-    }
-  }, [ayahText, language, navigate, toast]);
+    processData();
+  }, [imageData, language, navigate, processImage, toast]);
+
+  if (!imageData) {
+    navigate("/home");
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 animate-fadeIn">
