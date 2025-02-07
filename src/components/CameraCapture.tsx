@@ -408,4 +408,3 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
 };
 
 export default CameraCapture;
-
