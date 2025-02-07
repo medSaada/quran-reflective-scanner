@@ -79,11 +79,11 @@
 
 @layer utilities {
   .glass {
-    @apply backdrop-blur-md bg-background/50 dark:bg-black/20;
+    @apply backdrop-blur-md bg-background/30 dark:bg-black/10;
   }
   
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-lg dark:hover:shadow-none hover:-translate-y-1;
+    @apply transition-all duration-300 hover:-translate-y-1;
   }
   
   .text-balance {
@@ -95,6 +95,6 @@
   }
 
   .fancy-border {
-    @apply shadow-sm hover:shadow-lg dark:shadow-none;
+    @apply hover:-translate-y-1 transition-all duration-300;
   }
 }

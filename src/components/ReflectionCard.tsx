@@ -11,8 +11,7 @@ interface ReflectionCardProps {
 const ReflectionCard = ({ ayah, translation, reflection, date, className }: ReflectionCardProps) => {
   return (
     <div className={cn(
-      "p-6 bg-background/50 dark:bg-black/20 backdrop-blur-md rounded-2xl space-y-4",
-      "shadow-sm hover:shadow-lg dark:shadow-none",
+      "p-6 glass rounded-2xl space-y-4",
       "hover:-translate-y-1 transition-all duration-300",
       className
     )}>
@@ -20,7 +19,7 @@ const ReflectionCard = ({ ayah, translation, reflection, date, className }: Refl
         <p className="text-right text-xl leading-relaxed font-arabic">{ayah}</p>
         <p className="text-sm text-muted-foreground italic">{translation}</p>
       </div>
-      <div className="pt-4 border-t border-sage-200/20 dark:border-sage-700/20">
+      <div className="pt-4 border-t border-sage-200/10 dark:border-sage-700/10">
         <p className="text-sm">{reflection}</p>
         <p className="text-xs text-muted-foreground mt-2">{date}</p>
       </div>

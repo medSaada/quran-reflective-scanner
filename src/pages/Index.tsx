@@ -24,7 +24,6 @@ const Index = () => {
         title: "Success",
         description: "Data processed successfully",
       });
-      // Navigate to the ProcessedText page with the result
       navigate('/processed-text', { state: { processedData: result } });
       return result;
     } catch (error) {
@@ -62,15 +61,15 @@ const Index = () => {
           direction="diagonal"
           speed={0.5}
           squareSize={40}
-          borderColor="#333" 
-          hoverFillColor="#222"
+          borderColor="rgba(51, 51, 51, 0.3)"
+          hoverFillColor="rgba(34, 34, 34, 0.1)"
         />
       </div>
       <header className="space-y-2 text-center relative">
         <Button
-          variant="secondary"
+          variant="ghost"
           size="icon"
-          className="absolute left-0 top-0 glass shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-sage-300 dark:border-sage-700"
+          className="absolute left-0 top-0 hover:bg-background/50 dark:hover:bg-black/20"
           onClick={() => navigate('/')}
         >
           <Home className="w-5 h-5 text-sage-700 dark:text-sage-300" />
@@ -101,17 +100,17 @@ const Index = () => {
           >
             ← Back to home
           </button>
-          <div className="space-y-4 glass p-6 rounded-2xl">
+          <div className="space-y-4 glass rounded-2xl p-6">
             <h2 className="text-xl font-semibold text-sage-700 dark:text-sage-300">Enter Ayah</h2>
             <Textarea
               placeholder="Type or paste the Quranic verse here..."
               value={ayahText}
               onChange={(e) => setAyahText(e.target.value)}
-              className="min-h-[150px] text-lg"
+              className="min-h-[150px] text-lg bg-background/50 dark:bg-black/20 border-0 focus-visible:ring-1"
             />
             <Button 
               onClick={handleManualSubmit}
-              className="w-full"
+              className="w-full bg-sage-600 hover:bg-sage-700 text-white"
             >
               Process Ayah
             </Button>
@@ -137,7 +136,7 @@ const Index = () => {
           </section>
 
           <section className="space-y-4">
-            <div className="flex items-center gap-2 justify-center glass px-4 py-2 rounded-full shadow-lg w-fit mx-auto">
+            <div className="flex items-center gap-2 justify-center glass px-4 py-2 rounded-full w-fit mx-auto">
               <Heart className="w-5 h-5 text-sage-600 animate-pulse" />
               <h2 className="font-medium text-lg text-sage-800 dark:text-sage-200">Recent Reflections</h2>
             </div>
