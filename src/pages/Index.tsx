@@ -1,3 +1,4 @@
+
 import { Book, Camera, Heart, Home } from "lucide-react";
 import ActionCard from "@/components/ActionCard";
 import ReflectionCard from "@/components/ReflectionCard";
@@ -5,16 +6,17 @@ import CameraCapture from "@/components/CameraCapture";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { processData } from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Squares } from "@/components/ui/squares-background";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import LanguageSelector from "@/components/LanguageSelector";
+import { Language } from "@/types/language";
 
 const Index = () => {
   const [showCamera, setShowCamera] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [ayahText, setAyahText] = useState("");
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>("Arabic");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -28,7 +30,12 @@ const Index = () => {
       return;
     }
 
-    navigate("/waiting", { state: { ayahText: ayahText.trim() } });
+    navigate("/waiting", { 
+      state: { 
+        ayahText: ayahText.trim(),
+        language: selectedLanguage
+      } 
+    });
   };
 
   return (
@@ -42,6 +49,7 @@ const Index = () => {
           hoverFillColor="#222"
         />
       </div>
+      
       <header className="space-y-2 text-center relative">
         <Button
           variant="secondary"
@@ -67,7 +75,14 @@ const Index = () => {
           >
             ← Back to home
           </button>
-          <CameraCapture />
+          <CameraCapture selectedLanguage={selectedLanguage} />
+          <div className="mt-4">
+            <LanguageSelector
+              value={selectedLanguage}
+              onChange={setSelectedLanguage}
+              className="w-full glass"
+            />
+          </div>
         </div>
       ) : showManualEntry ? (
         <div className="space-y-4 animate-fadeIn max-w-2xl mx-auto">
@@ -79,6 +94,11 @@ const Index = () => {
           </button>
           <div className="space-y-4 glass p-6 rounded-2xl">
             <h2 className="text-xl font-semibold text-sage-700 dark:text-sage-300">Enter Ayah</h2>
+            <LanguageSelector
+              value={selectedLanguage}
+              onChange={setSelectedLanguage}
+              className="w-full"
+            />
             <Textarea
               placeholder="Type or paste the Quranic verse here..."
               value={ayahText}

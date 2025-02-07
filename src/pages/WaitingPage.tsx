@@ -1,20 +1,26 @@
+
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { processData } from "@/utils/api";
 import { useToast } from "@/hooks/use-toast";
+import { Language } from "@/types/language";
 
 const WaitingPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const ayahText = location.state?.ayahText;
+  const language = location.state?.language as Language;
 
   useEffect(() => {
     const processAyah = async () => {
       try {
-        const result = await processData({ text: ayahText });
-        navigate("/results", { state: { result } });
+        const result = await processData({ 
+          text: ayahText,
+          language: language || "Arabic"
+        });
+        navigate("/results", { state: { result, language } });
       } catch (error) {
         toast({
           title: "Error",
@@ -30,7 +36,7 @@ const WaitingPage = () => {
     } else {
       navigate("/home");
     }
-  }, [ayahText, navigate, toast]);
+  }, [ayahText, language, navigate, toast]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 animate-fadeIn">
@@ -49,7 +55,7 @@ const WaitingPage = () => {
           </div>
 
           <p className="text-sage-600 dark:text-sage-400 animate-pulse">
-            Finding deeper meanings...
+            Finding deeper meanings in {language || "Arabic"}...
           </p>
           
           <Progress value={66} className="w-full animate-pulse" />

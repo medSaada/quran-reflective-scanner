@@ -1,11 +1,14 @@
+
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
+import { Language } from "@/types/language";
 
 const ResultsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const result = location.state?.result;
+  const language = location.state?.language as Language;
 
   if (!result) {
     navigate("/home");
@@ -33,9 +36,14 @@ const ResultsPage = () => {
 
       <div className="max-w-2xl mx-auto space-y-8 pt-16">
         <div className="glass p-8 rounded-2xl space-y-6 animate-slideUp">
-          <h1 className="text-3xl font-semibold text-center bg-gradient-to-r from-sage-600 to-sand-600 dark:from-sage-400 dark:to-sand-400 bg-clip-text text-transparent">
-            Your Processed Ayah
-          </h1>
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-semibold bg-gradient-to-r from-sage-600 to-sand-600 dark:from-sage-400 dark:to-sand-400 bg-clip-text text-transparent">
+              Your Processed Ayah
+            </h1>
+            <span className="text-sm text-muted-foreground">
+              Language: {language || "Arabic"}
+            </span>
+          </div>
 
           <div className="space-y-4">
             <div className="space-y-2">

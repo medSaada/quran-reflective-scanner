@@ -1,6 +1,12 @@
+
 const API_URL = "http://127.0.0.1:8000/process-text/";
 
-export const processData = async (data: any) => {
+interface ProcessDataParams {
+  text: string;
+  language: string;
+}
+
+export const processData = async (data: ProcessDataParams) => {
   try {
     const response = await fetch(API_URL, {
       method: 'POST',
