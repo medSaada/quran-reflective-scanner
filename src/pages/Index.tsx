@@ -8,9 +8,13 @@ import { Button } from "@/components/ui/button";
 import { processData } from "@/utils/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Squares } from "@/components/ui/squares-background";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 
 const Index = () => {
   const [showCamera, setShowCamera] = useState(false);
+  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [ayahText, setAyahText] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -28,6 +32,29 @@ const Index = () => {
         description: "Failed to process data",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleManualSubmit = async () => {
+    if (!ayahText.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter an ayah",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await handleProcessData({ text: ayahText });
+      setAyahText("");
+      setShowManualEntry(false);
+      toast({
+        title: "Success",
+        description: "Ayah processed successfully",
+      });
+    } catch (error) {
+      console.error("Error processing ayah:", error);
     }
   };
 
@@ -69,6 +96,30 @@ const Index = () => {
           </button>
           <CameraCapture />
         </div>
+      ) : showManualEntry ? (
+        <div className="space-y-4 animate-fadeIn max-w-2xl mx-auto">
+          <button
+            onClick={() => setShowManualEntry(false)}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            ← Back to home
+          </button>
+          <div className="space-y-4 glass p-6 rounded-2xl">
+            <h2 className="text-xl font-semibold text-sage-700 dark:text-sage-300">Enter Ayah</h2>
+            <Textarea
+              placeholder="Type or paste the Quranic verse here..."
+              value={ayahText}
+              onChange={(e) => setAyahText(e.target.value)}
+              className="min-h-[150px] text-lg"
+            />
+            <Button 
+              onClick={handleManualSubmit}
+              className="w-full"
+            >
+              Process Ayah
+            </Button>
+          </div>
+        </div>
       ) : (
         <main className="space-y-8 max-w-2xl mx-auto">
           <section className="grid gap-4">
@@ -83,6 +134,7 @@ const Index = () => {
               icon={<Book className="w-6 h-6" />}
               title="Enter Manually"
               description="Type or paste the verse you want to reflect on"
+              onClick={() => setShowManualEntry(true)}
               className="animate-float [animation-delay:200ms]"
             />
           </section>
