@@ -6,9 +6,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { processData } from "@/utils/api";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Squares } from "@/components/ui/squares-background";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 
 const Index = () => {
@@ -25,6 +24,8 @@ const Index = () => {
         title: "Success",
         description: "Data processed successfully",
       });
+      // Navigate to the ProcessedText page with the result
+      navigate('/processed-text', { state: { processedData: result } });
       return result;
     } catch (error) {
       toast({
@@ -49,10 +50,6 @@ const Index = () => {
       await handleProcessData({ text: ayahText });
       setAyahText("");
       setShowManualEntry(false);
-      toast({
-        title: "Success",
-        description: "Ayah processed successfully",
-      });
     } catch (error) {
       console.error("Error processing ayah:", error);
     }
