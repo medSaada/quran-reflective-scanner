@@ -43,12 +43,18 @@ const WaitingPage = () => {
         });
       } catch (error) {
         console.error('Error processing content:', error);
+        const errorMessage = error instanceof Error 
+          ? error.message 
+          : 'Failed to process content. Please try again.';
+          
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to process content. Please try again.",
+          description: errorMessage,
         });
-        navigate("/home");
+        
+        // Delay navigation to allow user to read the error message
+        setTimeout(() => navigate("/home"), 2000);
       }
     };
 
@@ -92,3 +98,4 @@ const WaitingPage = () => {
 };
 
 export default WaitingPage;
+
