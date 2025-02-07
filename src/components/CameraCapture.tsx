@@ -1,89 +1,34 @@
 
-import { useState, useRef, useEffect } from "react";
-import axios from "axios";
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Camera, RotateCcw, Check, X } from "lucide-react";
-import ReactCrop, { type Crop } from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
+import { Camera } from "lucide-react";
 import { Language } from "@/types/language";
-import { ExtractedText } from "@/types/api";
+import { ImagePreview } from "./camera/ImagePreview";
+import { ImageCropper } from "./camera/ImageCropper";
+import { CameraPermissionDenied } from "./camera/CameraPermissionDenied";
+import { useCamera } from "./camera/hooks/useCamera";
+import { useImageProcessing } from "./camera/hooks/useImageProcessing";
+import { useImageCropping } from "./camera/hooks/useImageCropping";
 
 interface CameraCaptureProps {
   selectedLanguage: Language;
 }
 
 const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
-  const [stream, setStream] = useState<MediaStream | null>(null);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [croppedImage, setCroppedImage] = useState<string | null>(null);
-  const [extractedText, setExtractedText] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [permissionState, setPermissionState] = useState<PermissionState>("prompt");
-  const [crop, setCrop] = useState<Crop>();
-  const [isCropping, setIsCropping] = useState(false);
-  
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    checkCameraPermission();
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, []);
-
-  const checkCameraPermission = async () => {
-    try {
-      const result = await navigator.permissions.query({ name: 'camera' as PermissionName });
-      setPermissionState(result.state);
-      
-      result.addEventListener('change', () => {
-        setPermissionState(result.state);
-      });
-
-      if (result.state === 'granted') {
-        initializeCamera();
-      }
-    } catch (error) {
-      console.error('Permission check error:', error);
-      setError("Failed to check camera permissions");
-    }
-  };
-
-  const initializeCamera = async () => {
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
-      });
-      
-      setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-      }
-      
-      setError(null);
-      toast({
-        title: "Camera activated",
-        description: "You can now capture images",
-      });
-    } catch (err) {
-      console.error('Camera initialization error:', err);
-      setError("Failed to access camera");
-      toast({
-        variant: "destructive",
-        title: "Camera Error",
-        description: "Failed to access camera. Please check permissions.",
-      });
-    }
-  };
+  const { stream, error: cameraError, permissionState, initializeCamera } = useCamera();
+  const { isLoading, error: processingError, extractedText, processImage } = useImageProcessing();
+  const {
+    capturedImage,
+    setCapturedImage,
+    croppedImage,
+    setCroppedImage,
+    crop,
+    setCrop,
+    isCropping,
+    setIsCropping,
+    getCroppedImage
+  } = useImageCropping();
 
   const captureImage = () => {
     if (videoRef.current) {
@@ -101,102 +46,6 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
     }
   };
 
-  const getCroppedImage = (sourceImage: string, cropData: Crop): Promise<string> => {
-    return new Promise((resolve) => {
-      const image = new Image();
-      
-      image.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          console.error('Failed to get canvas context');
-          return;
-        }
-
-        // Wait for next frame to ensure image is rendered
-        requestAnimationFrame(() => {
-          // Find the actual displayed image element
-          const displayedImage = document.querySelector('.ReactCrop__image');
-          if (!displayedImage || !(displayedImage instanceof HTMLImageElement)) {
-            console.error('Could not find displayed image element');
-            resolve(sourceImage); // Fallback to original
-            return;
-          }
-
-          // Get the actual displayed dimensions
-          const displayWidth = displayedImage.clientWidth;
-          const displayHeight = displayedImage.clientHeight;
-
-          console.log('Dimensions:', {
-            natural: {
-              width: image.naturalWidth,
-              height: image.naturalHeight
-            },
-            display: {
-              width: displayWidth,
-              height: displayHeight
-            },
-            crop: cropData
-          });
-
-          // Calculate scaling factors based on displayed vs natural dimensions
-          const scaleX = image.naturalWidth / displayWidth;
-          const scaleY = image.naturalHeight / displayHeight;
-
-          // Scale the crop coordinates
-          const scaledCrop = {
-            x: Math.round(cropData.x * scaleX),
-            y: Math.round(cropData.y * scaleY),
-            width: Math.round(cropData.width * scaleX),
-            height: Math.round(cropData.height * scaleY)
-          };
-
-          console.log('Scaled crop:', {
-            original: cropData,
-            scaled: scaledCrop,
-            scale: { x: scaleX, y: scaleY }
-          });
-
-          // Set canvas dimensions to match the crop size
-          canvas.width = scaledCrop.width;
-          canvas.height = scaledCrop.height;
-
-          // Enable high quality rendering
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
-
-          // Clear canvas and ensure proper background
-          ctx.fillStyle = 'white';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-          // Draw the cropped portion
-          ctx.drawImage(
-            image,
-            scaledCrop.x,
-            scaledCrop.y,
-            scaledCrop.width,
-            scaledCrop.height,
-            0,
-            0,
-            scaledCrop.width,
-            scaledCrop.height
-          );
-
-          const croppedImageUrl = canvas.toDataURL('image/jpeg', 1.0);
-          resolve(croppedImageUrl);
-        });
-      };
-
-      image.onerror = () => {
-        console.error('Failed to load image for cropping');
-        resolve(sourceImage);
-      };
-
-      image.crossOrigin = 'anonymous';
-      image.src = sourceImage;
-    });
-  };
-
   const handleConfirmCrop = async () => {
     if (capturedImage && crop) {
       try {
@@ -208,11 +57,6 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
         processImage(croppedImageUrl);
       } catch (error) {
         console.error('Error during crop:', error);
-        toast({
-          variant: "destructive",
-          title: "Cropping Error",
-          description: "Failed to crop image. Please try again.",
-        });
       }
     }
   };
@@ -223,80 +67,17 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
     }
     setCapturedImage(null);
     setCroppedImage(null);
-    setExtractedText("");
-    setError(null);
     setIsCropping(false);
     setCrop(undefined);
-    initializeCamera(); // Re-initialize the camera
-  };
-
-  const processImage = async (imageDataUrl: string) => {
-    setIsLoading(true);
-    setError(null);
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-    
-    try {
-      const base64Data = imageDataUrl.split(',')[1];
-      const byteCharacters = atob(base64Data);
-      const byteNumbers = new Array(byteCharacters.length);
-      
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      
-      const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: 'image/jpeg' });
-      const formData = new FormData();
-      formData.append('file', blob, 'image.jpg');
-      
-      console.log('Sending request to API...');
-      const apiResponse = await axios.post<ExtractedText>(
-        'http://127.0.0.1:8000/process-image/',
-        formData,
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-          signal: controller.signal
-        }
-      );
-      
-      console.log('API Response:', apiResponse.data);
-      setExtractedText(apiResponse.data.text);
-      toast({
-        title: "Success",
-        description: "Text extracted successfully",
-      });
-    } catch (err) {
-      console.error('API error:', err);
-      if (axios.isAxiosError(err) && err.code === 'ERR_CANCELED') {
-        setError("Request timed out. Please try again.");
-      } else {
-        setError("Failed to process image");
-      }
-      toast({
-        variant: "destructive",
-        title: "Processing Error",
-        description: "Failed to extract text from image",
-      });
-    } finally {
-      clearTimeout(timeoutId);
-      setIsLoading(false);
-    }
+    initializeCamera();
   };
 
   if (permissionState === "denied") {
-    return (
-      <div className="flex flex-col items-center justify-center gap-4 p-6 glass rounded-xl text-center">
-        <p className="text-destructive font-medium">Camera access was denied</p>
-        <Button
-          variant="outline"
-          onClick={() => window.location.reload()}
-        >
-          Request Permission Again
-        </Button>
-      </div>
-    );
+    return <CameraPermissionDenied />;
+  }
+
+  if (videoRef.current && stream) {
+    videoRef.current.srcObject = stream;
   }
 
   return (
@@ -326,57 +107,19 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
           </div>
         </div>
       ) : isCropping ? (
-        <div className="space-y-4 animate-fadeIn">
-          <ReactCrop
-            crop={crop}
-            onChange={(c) => setCrop(c)}
-            className="rounded-lg overflow-hidden bg-black/90 shadow-xl"
-          >
-            <img
-              src={capturedImage}
-              alt="Captured"
-              className="w-full h-full object-cover"
-            />
-          </ReactCrop>
-          <div className="flex justify-center gap-4 mt-6">
-            <Button
-              variant="outline"
-              onClick={retakeImage}
-              className="flex items-center gap-2 hover:bg-sage-100 dark:hover:bg-sage-900"
-            >
-              <RotateCcw className="w-4 h-4" />
-              Retake
-            </Button>
-            <Button
-              onClick={handleConfirmCrop}
-              className="flex items-center gap-2 bg-sage-600 hover:bg-sage-700"
-              disabled={!crop}
-            >
-              <Check className="w-4 h-4" />
-              Confirm Crop
-            </Button>
-          </div>
-        </div>
+        <ImageCropper
+          imageUrl={capturedImage}
+          crop={crop}
+          onCropChange={setCrop}
+          onSave={handleConfirmCrop}
+          onReset={retakeImage}
+        />
       ) : (
-        <div className="space-y-4 animate-fadeIn">
-          <div className="relative aspect-video rounded-lg overflow-hidden shadow-xl">
-            <img
-              src={croppedImage || capturedImage}
-              alt="Captured"
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute top-4 right-4">
-              <Button
-                variant="outline"
-                onClick={retakeImage}
-                className="flex items-center gap-2 bg-white/90 hover:bg-white/100 transition-all"
-              >
-                <RotateCcw className="w-4 h-4" />
-                Retake
-              </Button>
-            </div>
-          </div>
-        </div>
+        <ImagePreview
+          imageUrl={croppedImage || capturedImage}
+          onRetake={retakeImage}
+          onConfirm={() => processImage(croppedImage || capturedImage || '')}
+        />
       )}
 
       {isLoading && (
@@ -398,9 +141,9 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
         </div>
       )}
 
-      {error && (
+      {(cameraError || processingError) && (
         <div className="p-4 rounded-lg bg-destructive/10 border border-destructive text-destructive animate-shake">
-          {error}
+          {cameraError || processingError}
         </div>
       )}
     </div>
