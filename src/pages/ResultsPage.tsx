@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
 import { Language } from "@/types/language";
+import ReflectionCard from "@/components/ReflectionCard";
 
 const ResultsPage = () => {
   const location = useLocation();
@@ -15,13 +16,18 @@ const ResultsPage = () => {
     return null;
   }
 
-  console.log("Result data:", result);
+  // Parse the text response from the API which is in JSON format
+  let parsedText;
+  try {
+    const textWithoutBackticks = result.text.replace(/```json\n|\n```/g, '');
+    parsedText = JSON.parse(textWithoutBackticks);
+  } catch (error) {
+    console.error('Error parsing result:', error);
+    parsedText = { text: result.text };
+  }
 
-  // Extract text and translation from the tafsir content
-  const tafsirContent = result.tafsir || "";
-  const extractedText = tafsirContent.match(/\"([^\"]+)\"/) ? tafsirContent.match(/\"([^\"]+)\"/)[1] : "";
-  const translationMatch = tafsirContent.match(/translates to \"([^\"]+)\"/);
-  const translation = translationMatch ? translationMatch[1] : "";
+  // Get current date for the reflection card
+  const currentDate = new Date().toLocaleDateString();
 
   return (
     <div className="min-h-screen p-6 animate-fadeIn">
@@ -35,45 +41,13 @@ const ResultsPage = () => {
       </Button>
 
       <div className="max-w-2xl mx-auto space-y-8 pt-16">
-        <div className="glass p-8 rounded-2xl space-y-6 animate-slideUp">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-semibold bg-gradient-to-r from-sage-600 to-sand-600 dark:from-sage-400 dark:to-sand-400 bg-clip-text text-transparent">
-              Your Processed Ayah
-            </h1>
-            <span className="text-sm text-muted-foreground">
-              Language: {language || "Arabic"}
-            </span>
-          </div>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <h2 className="text-xl font-medium text-sage-700 dark:text-sage-300">
-                Original Text
-              </h2>
-              <p className="text-lg text-right font-arabic text-foreground">
-                {extractedText}
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <h2 className="text-xl font-medium text-sage-700 dark:text-sage-300">
-                Translation
-              </h2>
-              <p className="text-lg italic text-foreground">
-                {translation}
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <h2 className="text-xl font-medium text-sage-700 dark:text-sage-300">
-                Reflection
-              </h2>
-              <p className="text-lg text-foreground whitespace-pre-wrap">
-                {result.tafsir}
-              </p>
-            </div>
-          </div>
-        </div>
+        <ReflectionCard
+          ayah={parsedText.French || parsedText.text || ""}
+          translation={parsedText.Time || ""}
+          reflection={parsedText.tafsir || "Processing completed successfully."}
+          date={currentDate}
+          className="animate-slideUp"
+        />
       </div>
     </div>
   );
