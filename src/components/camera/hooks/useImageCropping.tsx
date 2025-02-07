@@ -10,9 +10,37 @@ export const useImageCropping = () => {
 
   const getCroppedImage = async (sourceImage: string, cropData: Crop): Promise<string> => {
     return new Promise((resolve, reject) => {
+      // Create an image to get original dimensions
       const image = new Image();
       image.onload = () => {
         try {
+          // Create a temporary image element to get displayed dimensions
+          const displayImg = document.querySelector('img[alt="Captured"]') as HTMLImageElement;
+          if (!displayImg) {
+            console.error('Could not find displayed image element');
+            reject(new Error('Could not find displayed image element'));
+            return;
+          }
+
+          // Calculate scaling factors
+          const scaleX = image.naturalWidth / displayImg.width;
+          const scaleY = image.naturalHeight / displayImg.height;
+
+          console.log('Original dimensions:', image.naturalWidth, 'x', image.naturalHeight);
+          console.log('Display dimensions:', displayImg.width, 'x', displayImg.height);
+          console.log('Scale factors:', scaleX, scaleY);
+
+          // Scale crop coordinates to match original image dimensions
+          const scaledCrop = {
+            x: cropData.x * scaleX,
+            y: cropData.y * scaleY,
+            width: cropData.width * scaleX,
+            height: cropData.height * scaleY
+          };
+
+          console.log('Original crop:', cropData);
+          console.log('Scaled crop:', scaledCrop);
+
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           if (!ctx) {
@@ -22,24 +50,24 @@ export const useImageCropping = () => {
           }
 
           // Set canvas dimensions to match crop size
-          canvas.width = cropData.width;
-          canvas.height = cropData.height;
+          canvas.width = scaledCrop.width;
+          canvas.height = scaledCrop.height;
 
           // Fill with white background first
           ctx.fillStyle = 'white';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-          // Draw the cropped portion
+          // Draw the cropped portion using scaled coordinates
           ctx.drawImage(
             image,
-            cropData.x,
-            cropData.y,
-            cropData.width,
-            cropData.height,
+            scaledCrop.x,
+            scaledCrop.y,
+            scaledCrop.width,
+            scaledCrop.height,
             0,
             0,
-            cropData.width,
-            cropData.height
+            scaledCrop.width,
+            scaledCrop.height
           );
 
           const croppedImageUrl = canvas.toDataURL('image/jpeg', 1.0);
