@@ -1,18 +1,29 @@
+
 import { useState } from "react";
 import { type Crop } from 'react-image-crop';
 import { CameraInitializer } from "./camera/CameraInitializer";
 import { CameraPreview } from "./camera/CameraPreview";
 import { ImagePreview } from "./camera/ImagePreview";
 import { ImageCropper } from "./camera/ImageCropper";
+import { useImageCropping } from "./camera/hooks/useImageCropping";
 
 const CameraView = () => {
   const [isActive, setIsActive] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [crop, setCrop] = useState<Crop>();
-  const [isCropping, setIsCropping] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  const {
+    capturedImage,
+    setCapturedImage,
+    croppedImage,
+    setCroppedImage,
+    crop,
+    setCrop,
+    isCropping,
+    setIsCropping,
+    getCroppedImage
+  } = useImageCropping();
 
   const handleCameraReady = (newStream: MediaStream) => {
     setStream(newStream);
@@ -31,6 +42,7 @@ const CameraView = () => {
 
   const handleRetake = () => {
     setCapturedImage(null);
+    setCroppedImage(null);
     setIsPreview(false);
     setIsLoading(true);
   };
@@ -40,43 +52,26 @@ const CameraView = () => {
     setIsCropping(true);
   };
 
-  const handleSaveCrop = () => {
+  const handleSaveCrop = async () => {
     if (capturedImage && crop) {
-      const image = new Image();
-      image.src = capturedImage;
-      
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      if (!ctx) return;
-      
-      canvas.width = crop.width;
-      canvas.height = crop.height;
-      
-      ctx.drawImage(
-        image,
-        crop.x,
-        crop.y,
-        crop.width,
-        crop.height,
-        0,
-        0,
-        crop.width,
-        crop.height
-      );
-      
-      const croppedImageUrl = canvas.toDataURL('image/jpeg');
-      console.log('Cropped image:', croppedImageUrl);
-      
-      // Reset states
-      setCapturedImage(null);
-      setIsCropping(false);
-      setIsActive(false);
+      try {
+        console.log('Starting crop with data:', crop);
+        const croppedImageUrl = await getCroppedImage(capturedImage, crop);
+        console.log('Crop successful, setting cropped image');
+        setCroppedImage(croppedImageUrl);
+        setIsCropping(false);
+        // Clear states after successful crop
+        setCapturedImage(null);
+        setCrop(undefined);
+      } catch (error) {
+        console.error('Error during crop:', error);
+      }
     }
   };
 
   const handleReset = () => {
     setCapturedImage(null);
+    setCroppedImage(null);
     setIsCropping(false);
     setIsPreview(false);
     setIsActive(false);
@@ -87,7 +82,7 @@ const CameraView = () => {
 
   return (
     <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden glass animate-fadeIn">
-      {!isActive && !capturedImage && !isPreview ? (
+      {!isActive && !capturedImage && !isPreview && !croppedImage ? (
         <CameraInitializer
           onCameraReady={handleCameraReady}
           isLoading={isLoading}
@@ -110,6 +105,12 @@ const CameraView = () => {
           onCropChange={setCrop}
           onSave={handleSaveCrop}
           onReset={handleReset}
+        />
+      ) : croppedImage ? (
+        <ImagePreview
+          imageUrl={croppedImage}
+          onRetake={handleRetake}
+          onConfirm={() => console.log('Processing cropped image:', croppedImage)}
         />
       ) : null}
     </div>

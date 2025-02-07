@@ -20,6 +20,7 @@ export const useImageCropping = () => {
           return;
         }
 
+        // We need to wait for the image to be displayed in the DOM to get correct scaling
         requestAnimationFrame(() => {
           const displayedImage = document.querySelector('.ReactCrop__image');
           if (!displayedImage || !(displayedImage instanceof HTMLImageElement)) {
@@ -28,12 +29,14 @@ export const useImageCropping = () => {
             return;
           }
 
+          // Calculate scaling between displayed size and natural size
           const displayWidth = displayedImage.clientWidth;
           const displayHeight = displayedImage.clientHeight;
 
           const scaleX = image.naturalWidth / displayWidth;
           const scaleY = image.naturalHeight / displayHeight;
 
+          // Scale crop coordinates to match natural image size
           const scaledCrop = {
             x: Math.round(cropData.x * scaleX),
             y: Math.round(cropData.y * scaleY),
@@ -44,12 +47,15 @@ export const useImageCropping = () => {
           canvas.width = scaledCrop.width;
           canvas.height = scaledCrop.height;
 
+          // Set rendering quality
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'high';
 
+          // Fill with white background first
           ctx.fillStyle = 'white';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+          // Draw the cropped portion
           ctx.drawImage(
             image,
             scaledCrop.x,
