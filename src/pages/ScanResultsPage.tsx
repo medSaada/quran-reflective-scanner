@@ -6,7 +6,7 @@ import { Language } from "@/types/language";
 import ReflectionCard from "@/components/ReflectionCard";
 import { useToast } from "@/components/ui/use-toast";
 
-const ResultsPage = () => {
+const ScanResultsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -21,13 +21,23 @@ const ResultsPage = () => {
   // Get current date for the reflection card
   const currentDate = new Date().toLocaleDateString();
 
-  // Function to extract content from manual text input
+  // Function to extract content from scanned image result
   const extractContent = () => {
     try {
+      if (typeof result.text === 'string' && result.text.includes('```json')) {
+        const textWithoutBackticks = result.text.replace(/```json\n|\n```/g, '');
+        const parsed = JSON.parse(textWithoutBackticks);
+        return {
+          ayah: parsed.French || "",
+          translation: parsed.Time || "",
+          reflection: parsed.tafsir || ""
+        };
+      }
+      
       return {
-        ayah: result.text || "",
-        translation: result.translation || "",
-        reflection: result.tafsir || result.text || ""
+        ayah: "",
+        translation: "",
+        reflection: "Unable to process result"
       };
     } catch (error) {
       console.error('Error extracting content:', error);
@@ -70,4 +80,4 @@ const ResultsPage = () => {
   );
 };
 
-export default ResultsPage;
+export default ScanResultsPage;

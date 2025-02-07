@@ -28,33 +28,32 @@ const WaitingPage = () => {
         let result;
         if (imageData) {
           result = await processImage(imageData);
+          navigate("/scan-results", { 
+            state: { 
+              result,
+              language 
+            }
+          });
         } else {
           result = await processData({ 
             text: ayahText, 
             language: language || 'Arabic'
           });
+          navigate("/results", { 
+            state: { 
+              result,
+              language 
+            }
+          });
         }
-
-        navigate("/results", { 
-          state: { 
-            result,
-            language 
-          }
-        });
       } catch (error) {
         console.error('Error processing content:', error);
-        const errorMessage = error instanceof Error 
-          ? error.message 
-          : 'Failed to process content. Please try again.';
-          
         toast({
           variant: "destructive",
           title: "Error",
-          description: errorMessage,
+          description: "Failed to process content. Please try again.",
         });
-        
-        // Delay navigation to allow user to read the error message
-        setTimeout(() => navigate("/home"), 2000);
+        navigate("/home");
       }
     };
 
@@ -98,4 +97,3 @@ const WaitingPage = () => {
 };
 
 export default WaitingPage;
-
