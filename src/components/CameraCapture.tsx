@@ -5,12 +5,13 @@ import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Camera, RotateCcw, Check, X } from "lucide-react";
 import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import { Language } from "@/types/language";
 
-interface ExtractedText {
-  text: string;
+interface CameraCaptureProps {
+  selectedLanguage: Language;
 }
 
-const CameraCapture = () => {
+const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [croppedImage, setCroppedImage] = useState<string | null>(null);
@@ -299,31 +300,35 @@ const CameraCapture = () => {
   return (
     <div className="flex flex-col gap-6 w-full max-w-2xl mx-auto glass p-6 rounded-xl animate-fadeIn">
       {!capturedImage ? (
-        <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
+        <div className="relative aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-sage-900/90 to-sage-800/90 shadow-xl">
           <video
             ref={videoRef}
             autoPlay
             playsInline
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover mix-blend-overlay"
             style={{ transform: 'scaleX(-1)' }}
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
           <div className="absolute bottom-4 left-0 right-0 flex justify-center">
             <Button
               onClick={captureImage}
               size="lg"
-              className="rounded-full w-16 h-16 bg-white/80 hover:bg-white/90"
+              className="rounded-full w-16 h-16 bg-sage-500/90 hover:bg-sage-600/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
               disabled={isLoading || !stream}
             >
-              <Camera className="w-8 h-8 text-sage-600" />
+              <Camera className="w-8 h-8 text-white" />
             </Button>
+          </div>
+          <div className="absolute top-4 left-4 text-white/80 font-medium">
+            Selected Language: {selectedLanguage}
           </div>
         </div>
       ) : isCropping ? (
-        <div className="space-y-4">
+        <div className="space-y-4 animate-fadeIn">
           <ReactCrop
             crop={crop}
             onChange={(c) => setCrop(c)}
-            className="rounded-lg overflow-hidden bg-black"
+            className="rounded-lg overflow-hidden bg-black/90 shadow-xl"
           >
             <img
               src={capturedImage}
@@ -331,18 +336,18 @@ const CameraCapture = () => {
               className="w-full h-full object-cover"
             />
           </ReactCrop>
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center gap-4 mt-6">
             <Button
               variant="outline"
               onClick={retakeImage}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 hover:bg-sage-100 dark:hover:bg-sage-900"
             >
               <RotateCcw className="w-4 h-4" />
               Retake
             </Button>
             <Button
               onClick={handleConfirmCrop}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-sage-600 hover:bg-sage-700"
               disabled={!crop}
             >
               <Check className="w-4 h-4" />
@@ -351,40 +356,42 @@ const CameraCapture = () => {
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
-          <div className="relative aspect-video rounded-lg overflow-hidden">
+        <div className="space-y-4 animate-fadeIn">
+          <div className="relative aspect-video rounded-lg overflow-hidden shadow-xl">
             <img
               src={croppedImage || capturedImage}
               alt="Captured"
               className="w-full h-full object-cover"
             />
-            <Button
-              variant="outline"
-              onClick={retakeImage}
-              className="absolute top-4 right-4 flex items-center gap-2"
-            >
-              <RotateCcw className="w-4 h-4" />
-              Retake
-            </Button>
+            <div className="absolute top-4 right-4">
+              <Button
+                variant="outline"
+                onClick={retakeImage}
+                className="flex items-center gap-2 bg-white/90 hover:bg-white/100 transition-all"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Retake
+              </Button>
+            </div>
           </div>
         </div>
       )}
 
       {isLoading && (
-        <div className="flex flex-col items-center justify-center gap-4 p-6">
+        <div className="flex flex-col items-center justify-center gap-4 p-6 animate-fadeIn">
           <div className="relative">
             <div className="w-16 h-16 border-4 border-sage-200 border-t-sage-600 rounded-full animate-spin" />
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-12 h-12 border-4 border-sage-600 border-t-sage-200 rounded-full animate-spin-reverse" />
             </div>
           </div>
-          <p className="text-muted-foreground animate-pulse">Processing image...</p>
+          <p className="text-muted-foreground animate-pulse">Processing image in {selectedLanguage}...</p>
         </div>
       )}
 
       {extractedText && (
-        <div className="p-4 rounded-lg bg-background/50 border animate-fadeIn">
-          <h3 className="font-medium mb-2">Extracted Text:</h3>
+        <div className="p-6 rounded-lg bg-white/50 dark:bg-black/50 border border-sage-200 dark:border-sage-800 shadow-lg animate-fadeIn">
+          <h3 className="font-medium mb-2 text-sage-800 dark:text-sage-200">Extracted Text:</h3>
           <p className="text-muted-foreground">{extractedText}</p>
         </div>
       )}
