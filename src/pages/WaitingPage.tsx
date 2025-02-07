@@ -28,24 +28,19 @@ const WaitingPage = () => {
         let result;
         if (imageData) {
           result = await processImage(imageData);
-          navigate("/scan-results", { 
-            state: { 
-              result,
-              language 
-            }
-          });
         } else {
           result = await processData({ 
             text: ayahText, 
             language: language || 'Arabic'
           });
-          navigate("/results", { 
-            state: { 
-              result,
-              language 
-            }
-          });
         }
+
+        navigate("/results", { 
+          state: { 
+            result,
+            language 
+          }
+        });
       } catch (error) {
         console.error('Error processing content:', error);
         toast({
