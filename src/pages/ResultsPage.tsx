@@ -12,6 +12,8 @@ const ResultsPage = () => {
     return null;
   }
 
+  console.log("Result data:", result); // For debugging
+
   return (
     <div className="min-h-screen p-6 animate-fadeIn">
       <Button
