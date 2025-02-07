@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +9,7 @@ import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
 import WaitingPage from "./pages/WaitingPage";
 import ResultsPage from "./pages/ResultsPage";
+import ScanResultsPage from "./pages/ScanResultsPage";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +24,7 @@ const App = () => (
           <Route path="/home" element={<Index />} />
           <Route path="/waiting" element={<WaitingPage />} />
           <Route path="/results" element={<ResultsPage />} />
+          <Route path="/scan-results" element={<ScanResultsPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
