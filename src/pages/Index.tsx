@@ -18,23 +18,6 @@ const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleProcessData = async (data: any) => {
-    try {
-      const result = await processData(data);
-      toast({
-        title: "Success",
-        description: "Data processed successfully",
-      });
-      return result;
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to process data",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleManualSubmit = async () => {
     if (!ayahText.trim()) {
       toast({
@@ -45,17 +28,7 @@ const Index = () => {
       return;
     }
 
-    try {
-      await handleProcessData({ text: ayahText });
-      setAyahText("");
-      setShowManualEntry(false);
-      toast({
-        title: "Success",
-        description: "Ayah processed successfully",
-      });
-    } catch (error) {
-      console.error("Error processing ayah:", error);
-    }
+    navigate("/waiting", { state: { ayahText: ayahText.trim() } });
   };
 
   return (

@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
+import WaitingPage from "./pages/WaitingPage";
+import ResultsPage from "./pages/ResultsPage";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +20,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/home" element={<Index />} />
+          <Route path="/waiting" element={<WaitingPage />} />
+          <Route path="/results" element={<ResultsPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
