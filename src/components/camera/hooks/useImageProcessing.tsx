@@ -46,10 +46,7 @@ export const useImageProcessing = () => {
       
       console.log('API Response:', apiResponse.data);
       setExtractedText(apiResponse.data.text);
-      toast({
-        title: "Success",
-        description: "Text extracted successfully",
-      });
+      return apiResponse.data;
     } catch (err) {
       console.error('API error:', err);
       if (axios.isAxiosError(err) && err.code === 'ERR_CANCELED') {
@@ -57,11 +54,7 @@ export const useImageProcessing = () => {
       } else {
         setError("Failed to process image");
       }
-      toast({
-        variant: "destructive",
-        title: "Processing Error",
-        description: "Failed to extract text from image",
-      });
+      throw err;
     } finally {
       clearTimeout(timeoutId);
       setIsLoading(false);

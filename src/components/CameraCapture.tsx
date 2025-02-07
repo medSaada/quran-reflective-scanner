@@ -9,12 +9,14 @@ import { CameraPermissionDenied } from "./camera/CameraPermissionDenied";
 import { useCamera } from "./camera/hooks/useCamera";
 import { useImageProcessing } from "./camera/hooks/useImageProcessing";
 import { useImageCropping } from "./camera/hooks/useImageCropping";
+import { useNavigate } from "react-router-dom";
 
 interface CameraCaptureProps {
   selectedLanguage: Language;
 }
 
 const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
+  const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const { stream, error: cameraError, permissionState, initializeCamera } = useCamera();
   const { isLoading, error: processingError, extractedText, processImage } = useImageProcessing();
@@ -54,9 +56,24 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
         console.log('Crop successful, setting cropped image');
         setCroppedImage(croppedImageUrl);
         setIsCropping(false);
-        processImage(croppedImageUrl);
       } catch (error) {
         console.error('Error during crop:', error);
+      }
+    }
+  };
+
+  const handleConfirmImage = async () => {
+    if (croppedImage) {
+      try {
+        await processImage(croppedImage);
+        navigate("/waiting", { 
+          state: { 
+            ayahText: extractedText,
+            language: selectedLanguage 
+          }
+        });
+      } catch (error) {
+        console.error('Error processing image:', error);
       }
     }
   };
@@ -118,27 +135,8 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
         <ImagePreview
           imageUrl={croppedImage || capturedImage}
           onRetake={retakeImage}
-          onConfirm={() => processImage(croppedImage || capturedImage || '')}
+          onConfirm={handleConfirmImage}
         />
-      )}
-
-      {isLoading && (
-        <div className="flex flex-col items-center justify-center gap-4 p-6 animate-fadeIn">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-sage-200 border-t-sage-600 rounded-full animate-spin" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-12 h-12 border-4 border-sage-600 border-t-sage-200 rounded-full animate-spin-reverse" />
-            </div>
-          </div>
-          <p className="text-muted-foreground animate-pulse">Processing image in {selectedLanguage}...</p>
-        </div>
-      )}
-
-      {extractedText && (
-        <div className="p-6 rounded-lg bg-white/50 dark:bg-black/50 border border-sage-200 dark:border-sage-800 shadow-lg animate-fadeIn">
-          <h3 className="font-medium mb-2 text-sage-800 dark:text-sage-200">Extracted Text:</h3>
-          <p className="text-muted-foreground">{extractedText}</p>
-        </div>
       )}
 
       {(cameraError || processingError) && (
