@@ -18,6 +18,7 @@ export const useImageProcessing = () => {
     const timeoutId = setTimeout(() => controller.abort(), 10000);
     
     try {
+      // Convert the base64 image to a blob
       const base64Data = imageDataUrl.split(',')[1];
       const byteCharacters = atob(base64Data);
       const byteNumbers = new Array(byteCharacters.length);
@@ -28,10 +29,12 @@ export const useImageProcessing = () => {
       
       const byteArray = new Uint8Array(byteNumbers);
       const blob = new Blob([byteArray], { type: 'image/jpeg' });
-      const formData = new FormData();
-      formData.append('file', blob, 'image.jpg');
       
-      console.log('Sending request to API...');
+      // Create FormData and append the blob
+      const formData = new FormData();
+      formData.append('file', blob, 'cropped-image.jpg');
+      
+      console.log('Sending request to API with cropped image...');
       const apiResponse = await axios.post<ExtractedText>(
         'http://127.0.0.1:8000/process-image/',
         formData,

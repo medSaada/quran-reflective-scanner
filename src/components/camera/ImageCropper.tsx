@@ -20,18 +20,22 @@ export const ImageCropper = ({
   onReset 
 }: ImageCropperProps) => {
   return (
-    <div className="relative h-full">
-      <ReactCrop
-        crop={crop}
-        onChange={onCropChange}
-        className="h-full"
-      >
-        <img
-          src={imageUrl}
-          alt="Captured"
-          className="max-h-full w-full object-contain"
-        />
-      </ReactCrop>
+    <div className="relative h-full flex flex-col">
+      <div className="flex-1 overflow-hidden">
+        <ReactCrop
+          crop={crop}
+          onChange={onCropChange}
+          className="h-full"
+          minWidth={100}
+          minHeight={100}
+        >
+          <img
+            src={imageUrl}
+            alt="Captured"
+            className="max-h-full w-full object-contain"
+          />
+        </ReactCrop>
+      </div>
       <div className="absolute top-4 right-4 flex gap-2">
         <Button
           onClick={onReset}
@@ -44,6 +48,7 @@ export const ImageCropper = ({
           onClick={onSave}
           variant="default"
           className="bg-sage-600 hover:bg-sage-700"
+          disabled={!crop || !crop.width || !crop.height}
         >
           Save Crop
         </Button>

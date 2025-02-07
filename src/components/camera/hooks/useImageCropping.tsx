@@ -9,47 +9,21 @@ export const useImageCropping = () => {
   const [isCropping, setIsCropping] = useState(false);
 
   const getCroppedImage = async (sourceImage: string, cropData: Crop): Promise<string> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const image = new Image();
-      
       image.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          console.error('Failed to get canvas context');
-          return;
-        }
-
-        // We need to wait for the image to be displayed in the DOM to get correct scaling
-        requestAnimationFrame(() => {
-          const displayedImage = document.querySelector('.ReactCrop__image');
-          if (!displayedImage || !(displayedImage instanceof HTMLImageElement)) {
-            console.error('Could not find displayed image element');
-            resolve(sourceImage);
+        try {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            console.error('Failed to get canvas context');
+            reject(new Error('Failed to get canvas context'));
             return;
           }
 
-          // Calculate scaling between displayed size and natural size
-          const displayWidth = displayedImage.clientWidth;
-          const displayHeight = displayedImage.clientHeight;
-
-          const scaleX = image.naturalWidth / displayWidth;
-          const scaleY = image.naturalHeight / displayHeight;
-
-          // Scale crop coordinates to match natural image size
-          const scaledCrop = {
-            x: Math.round(cropData.x * scaleX),
-            y: Math.round(cropData.y * scaleY),
-            width: Math.round(cropData.width * scaleX),
-            height: Math.round(cropData.height * scaleY)
-          };
-
-          canvas.width = scaledCrop.width;
-          canvas.height = scaledCrop.height;
-
-          // Set rendering quality
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
+          // Set canvas dimensions to match crop size
+          canvas.width = cropData.width;
+          canvas.height = cropData.height;
 
           // Fill with white background first
           ctx.fillStyle = 'white';
@@ -58,27 +32,30 @@ export const useImageCropping = () => {
           // Draw the cropped portion
           ctx.drawImage(
             image,
-            scaledCrop.x,
-            scaledCrop.y,
-            scaledCrop.width,
-            scaledCrop.height,
+            cropData.x,
+            cropData.y,
+            cropData.width,
+            cropData.height,
             0,
             0,
-            scaledCrop.width,
-            scaledCrop.height
+            cropData.width,
+            cropData.height
           );
 
           const croppedImageUrl = canvas.toDataURL('image/jpeg', 1.0);
+          console.log('Successfully created cropped image');
           resolve(croppedImageUrl);
-        });
+        } catch (error) {
+          console.error('Error during crop operation:', error);
+          reject(error);
+        }
       };
 
       image.onerror = () => {
         console.error('Failed to load image for cropping');
-        resolve(sourceImage);
+        reject(new Error('Failed to load image for cropping'));
       };
 
-      image.crossOrigin = 'anonymous';
       image.src = sourceImage;
     });
   };
