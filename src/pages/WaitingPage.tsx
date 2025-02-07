@@ -50,11 +50,10 @@ const WaitingPage = () => {
         console.error('Error processing content:', error);
         toast({
           variant: "destructive",
-          title: "Connection Error",
-          description: error instanceof Error ? error.message : "Failed to connect to the server. Please try again.",
+          title: "Error",
+          description: "Failed to process content. Please try again.",
         });
-        // Add slight delay before navigation to ensure toast is visible
-        setTimeout(() => navigate("/home"), 2000);
+        navigate("/home");
       }
     };
 
