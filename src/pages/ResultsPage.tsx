@@ -12,7 +12,13 @@ const ResultsPage = () => {
     return null;
   }
 
-  console.log("Result data:", result); // For debugging
+  console.log("Result data:", result);
+
+  // Extract text and translation from the tafsir content
+  const tafsirContent = result.tafsir || "";
+  const extractedText = tafsirContent.match(/\"([^\"]+)\"/) ? tafsirContent.match(/\"([^\"]+)\"/)[1] : "";
+  const translationMatch = tafsirContent.match(/translates to \"([^\"]+)\"/);
+  const translation = translationMatch ? translationMatch[1] : "";
 
   return (
     <div className="min-h-screen p-6 animate-fadeIn">
@@ -36,15 +42,17 @@ const ResultsPage = () => {
               <h2 className="text-xl font-medium text-sage-700 dark:text-sage-300">
                 Original Text
               </h2>
-              <p className="text-lg text-right font-arabic">{result.text}</p>
+              <p className="text-lg text-right font-arabic text-foreground">
+                {extractedText}
+              </p>
             </div>
 
             <div className="space-y-2">
               <h2 className="text-xl font-medium text-sage-700 dark:text-sage-300">
                 Translation
               </h2>
-              <p className="text-lg italic text-sage-600 dark:text-sage-400">
-                {result.translation}
+              <p className="text-lg italic text-foreground">
+                {translation}
               </p>
             </div>
 
@@ -52,8 +60,8 @@ const ResultsPage = () => {
               <h2 className="text-xl font-medium text-sage-700 dark:text-sage-300">
                 Reflection
               </h2>
-              <p className="text-lg text-sage-600 dark:text-sage-400">
-                {result.reflection}
+              <p className="text-lg text-foreground whitespace-pre-wrap">
+                {result.tafsir}
               </p>
             </div>
           </div>
