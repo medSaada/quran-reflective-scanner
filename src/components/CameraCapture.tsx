@@ -6,6 +6,7 @@ import { Loader2, Camera, RotateCcw, Check, X } from "lucide-react";
 import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { Language } from "@/types/language";
+import { ExtractedText } from "@/types/api";
 
 interface CameraCaptureProps {
   selectedLanguage: Language;
