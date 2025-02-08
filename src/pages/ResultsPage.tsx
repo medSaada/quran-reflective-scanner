@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Book, ScrollText } from "lucide-react";
+import { Home, Book, ScrollText, BookOpen } from "lucide-react";
 import { Language } from "@/types/language";
 import ReflectionCard from "@/components/ReflectionCard";
 import { useToast } from "@/components/ui/use-toast";
@@ -13,7 +13,7 @@ const ResultsPage = () => {
   const { toast } = useToast();
   const result = location.state?.result;
   const language = location.state?.language as Language;
-  const [activeView, setActiveView] = useState<"manager" | "authentic" | "curated">("manager");
+  const [activeView, setActiveView] = useState<"manager" | "authentic" | "curated" | "tadabur">("manager");
 
   if (!result) {
     navigate("/home");
@@ -44,6 +44,12 @@ const ResultsPage = () => {
               translation: language,
               reflection: "Curated Hadith Collection"
             };
+          case "tadabur":
+            return {
+              ayah: parsed.tadaburGuidance || "No tadabur guidance available",
+              translation: language,
+              reflection: "Tadabur Guidance"
+            };
           default:
             return {
               ayah: parsed.text || "",
@@ -67,6 +73,12 @@ const ResultsPage = () => {
               ayah: result.curatedHadith || "No curated hadith available",
               translation: language,
               reflection: "Curated Hadith Collection"
+            };
+          case "tadabur":
+            return {
+              ayah: result.tadaburGuidance || "No tadabur guidance available",
+              translation: language,
+              reflection: "Tadabur Guidance"
             };
           default:
             return {
@@ -113,6 +125,13 @@ const ResultsPage = () => {
 
       <div className="max-w-2xl mx-auto space-y-8 pt-16">
         <div className="flex justify-center gap-4 mb-6">
+          <Button
+            variant={activeView === "tadabur" ? "default" : "outline"}
+            onClick={() => setActiveView("tadabur")}
+          >
+            <BookOpen className="mr-2" />
+            Tadabur Guidance
+          </Button>
           <Button
             variant={activeView === "authentic" ? "default" : "outline"}
             onClick={() => setActiveView("authentic")}
