@@ -6,6 +6,31 @@ import { Home, Book, BookOpen } from "lucide-react";
 import { Language } from "@/types/language";
 import ReflectionCard from "@/components/ReflectionCard";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+interface AuthenticHadithEntry {
+  number: number;
+  arabicText: string;
+  source: {
+    name: string;
+    reference: string;
+  };
+  explanation: string;
+  translation?: string;
+}
+
+interface AuthenticHadithData {
+  title: string;
+  hadiths: AuthenticHadithEntry[];
+  context?: string;
+}
 
 const ResultsPage = () => {
   const location = useLocation();
@@ -20,13 +45,10 @@ const ResultsPage = () => {
     return null;
   }
 
-  // Get current date for the reflection card
   const currentDate = new Date().toLocaleDateString();
 
-  // Function to extract content based on result type and view
   const extractContent = () => {
     try {
-      // For image processing results (which come as JSON string)
       if (typeof result.text === 'string' && result.text.includes('```json')) {
         const textWithoutBackticks = result.text.replace(/```json\n|\n```/g, '');
         const parsed = JSON.parse(textWithoutBackticks);
@@ -34,7 +56,7 @@ const ResultsPage = () => {
         switch (activeView) {
           case "authentic":
             return {
-              ayah: parsed.authenticHadith || "No authentic hadith available",
+              ayah: renderAuthenticHadith(parsed.authenticHadith),
               translation: language,
               reflection: "Authentic Hadith Collection"
             };
@@ -53,12 +75,11 @@ const ResultsPage = () => {
         }
       }
       
-      // For manual text input results
       if (typeof result === 'object') {
         switch (activeView) {
           case "authentic":
             return {
-              ayah: result.authenticHadith || "No authentic hadith available",
+              ayah: renderAuthenticHadith(result.authenticHadith),
               translation: language,
               reflection: "Authentic Hadith Collection"
             };
@@ -77,7 +98,6 @@ const ResultsPage = () => {
         }
       }
 
-      // Fallback
       return {
         ayah: "",
         translation: "",
@@ -98,6 +118,50 @@ const ResultsPage = () => {
     }
   };
 
+  const renderAuthenticHadith = (hadithData: AuthenticHadithData) => {
+    if (!hadithData || !hadithData.hadiths) {
+      return "No authentic hadith available";
+    }
+
+    return (
+      <div className="space-y-6">
+        <h2 className="text-xl font-semibold text-center mb-4">{hadithData.title}</h2>
+        
+        {hadithData.context && (
+          <div className="bg-sage-50 p-4 rounded-lg mb-6">
+            <p className="text-sage-800">{hadithData.context}</p>
+          </div>
+        )}
+
+        <div className="space-y-8">
+          {hadithData.hadiths.map((hadith, index) => (
+            <div key={index} className="bg-white rounded-lg shadow-md p-6 space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-sage-600">Hadith #{hadith.number}</span>
+                <span className="text-sm font-medium text-sage-700">
+                  {hadith.source.name} - {hadith.source.reference}
+                </span>
+              </div>
+              
+              <div className="space-y-4">
+                <p className="text-right text-lg leading-relaxed">{hadith.arabicText}</p>
+                
+                {hadith.translation && (
+                  <p className="text-gray-700">{hadith.translation}</p>
+                )}
+                
+                <div className="pt-4 border-t border-gray-100">
+                  <h4 className="text-sm font-medium text-sage-700 mb-2">Explanation:</h4>
+                  <p className="text-gray-600">{hadith.explanation}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const content = extractContent();
 
   return (
@@ -111,7 +175,7 @@ const ResultsPage = () => {
         <Home className="w-5 h-5" />
       </Button>
 
-      <div className="max-w-2xl mx-auto space-y-8 pt-16">
+      <div className="max-w-4xl mx-auto space-y-8 pt-16">
         <div className="flex justify-center gap-4 mb-6">
           <Button
             variant={activeView === "tadabur" ? "default" : "outline"}
