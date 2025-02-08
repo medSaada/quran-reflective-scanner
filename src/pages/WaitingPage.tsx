@@ -95,3 +95,6 @@ const WaitingPage = () => {
       </div>
     </div>
   );
+};
+
+export default WaitingPage;
