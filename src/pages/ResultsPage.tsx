@@ -21,13 +21,34 @@ const ResultsPage = () => {
   // Get current date for the reflection card
   const currentDate = new Date().toLocaleDateString();
 
-  // Function to extract content from manual text input
+  // Function to extract content based on result type
   const extractContent = () => {
     try {
+      // For image processing results (which come as JSON string)
+      if (typeof result.text === 'string' && result.text.includes('```json')) {
+        const textWithoutBackticks = result.text.replace(/```json\n|\n```/g, '');
+        const parsed = JSON.parse(textWithoutBackticks);
+        return {
+          ayah: parsed.French || "",
+          translation: parsed.Time || "",
+          reflection: parsed.tafsir || ""
+        };
+      }
+      
+      // For manual text input results
+      if (typeof result === 'object') {
+        return {
+          ayah: result.text || "",
+          translation: result.translation || "",
+          reflection: result.tafsir || result.text || ""
+        };
+      }
+
+      // Fallback
       return {
-        ayah: result.text || "",
-        translation: result.translation || "",
-        reflection: result.tafsir || result.text || ""
+        ayah: "",
+        translation: "",
+        reflection: "Unable to process result"
       };
     } catch (error) {
       console.error('Error extracting content:', error);
