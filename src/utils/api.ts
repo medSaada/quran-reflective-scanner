@@ -12,17 +12,19 @@ export const processData = async (data: ProcessDataParams) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
       body: JSON.stringify(data),
     });
     
     if (!response.ok) {
-      throw new Error('Network response was not ok');
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     return await response.json();
   } catch (error) {
     console.error('Error:', error);
-    throw error;
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    throw new Error(`API request failed: ${errorMessage}`);
   }
 };

@@ -50,8 +50,11 @@ const WaitingPage = () => {
         console.error('Error processing content:', error);
         toast({
           variant: "destructive",
-          title: "Error",
-          description: "Failed to process content. Please try again.",
+          title: "Processing Error",
+          description: error instanceof Error 
+            ? `Failed to process content: ${error.message}`
+            : "Failed to process content. Please try again.",
+          duration: 5000,
         });
         navigate("/home");
       }
