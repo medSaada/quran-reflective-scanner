@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Book, ScrollText, BookOpen } from "lucide-react";
+import { Home, Book, BookOpen } from "lucide-react";
 import { Language } from "@/types/language";
 import ReflectionCard from "@/components/ReflectionCard";
 import { useToast } from "@/components/ui/use-toast";
@@ -13,7 +13,7 @@ const ResultsPage = () => {
   const { toast } = useToast();
   const result = location.state?.result;
   const language = location.state?.language as Language;
-  const [activeView, setActiveView] = useState<"manager" | "authentic" | "curated" | "tadabur">("manager");
+  const [activeView, setActiveView] = useState<"manager" | "authentic" | "tadabur">("manager");
 
   if (!result) {
     navigate("/home");
@@ -38,12 +38,6 @@ const ResultsPage = () => {
               translation: language,
               reflection: "Authentic Hadith Collection"
             };
-          case "curated":
-            return {
-              ayah: parsed.curatedHadith || "No curated hadith available",
-              translation: language,
-              reflection: "Curated Hadith Collection"
-            };
           case "tadabur":
             return {
               ayah: parsed.tadaburGuidance || "No tadabur guidance available",
@@ -67,12 +61,6 @@ const ResultsPage = () => {
               ayah: result.authenticHadith || "No authentic hadith available",
               translation: language,
               reflection: "Authentic Hadith Collection"
-            };
-          case "curated":
-            return {
-              ayah: result.curatedHadith || "No curated hadith available",
-              translation: language,
-              reflection: "Curated Hadith Collection"
             };
           case "tadabur":
             return {
@@ -138,13 +126,6 @@ const ResultsPage = () => {
           >
             <Book className="mr-2" />
             Authentic Ahadith
-          </Button>
-          <Button
-            variant={activeView === "curated" ? "default" : "outline"}
-            onClick={() => setActiveView("curated")}
-          >
-            <ScrollText className="mr-2" />
-            Curated Ahadith
           </Button>
         </div>
 
