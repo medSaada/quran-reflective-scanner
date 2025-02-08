@@ -1,5 +1,5 @@
 
-const API_URL = "https://127.0.0.1:8000/process-text/";
+const API_URL = "http://127.0.0.1:8000/process-text/";
 
 interface ProcessDataParams {
   text: string;
@@ -12,11 +12,9 @@ export const processData = async (data: ProcessDataParams) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        'Accept': 'application/json'
       },
-      body: JSON.stringify(data),
-      credentials: 'include'
+      body: JSON.stringify(data)
     });
     
     if (!response.ok) {
