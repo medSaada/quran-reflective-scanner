@@ -1,5 +1,5 @@
 
-const API_URL = "http://127.0.0.1:8000/process-text/";
+const API_URL = "https://127.0.0.1:8000/process-text/";
 
 interface ProcessDataParams {
   text: string;
@@ -12,17 +12,20 @@ export const processData = async (data: ProcessDataParams) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Access-Control-Allow-Origin': '*'
       },
       body: JSON.stringify(data),
+      credentials: 'include'
     });
     
     if (!response.ok) {
-      throw new Error('Network response was not ok');
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     return await response.json();
   } catch (error) {
-    console.error('Error:', error);
-    throw error;
+    console.error('API Error:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to connect to API server. Please ensure the server is running.');
   }
 };

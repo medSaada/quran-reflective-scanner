@@ -45,8 +45,9 @@ const WaitingPage = () => {
         console.error('Error processing content:', error);
         toast({
           variant: "destructive",
-          title: "Error",
-          description: "Failed to process content. Please try again.",
+          title: "Connection Error",
+          description: error instanceof Error ? error.message : "Failed to connect to API server. Please check your connection and try again.",
+          duration: 5000,
         });
         navigate("/home");
       }
