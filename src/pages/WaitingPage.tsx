@@ -31,7 +31,8 @@ const WaitingPage = () => {
           navigate("/scan-results", { 
             state: { 
               result,
-              language 
+              language,
+              imageUrl: imageData // Pass the image data URL
             }
           });
         } else {
