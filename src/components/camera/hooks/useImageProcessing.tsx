@@ -39,8 +39,12 @@ export const useImageProcessing = () => {
         'http://127.0.0.1:8000/process-image/',
         formData,
         {
-          headers: { 'Content-Type': 'multipart/form-data' },
-          signal: controller.signal
+          headers: { 
+            'Content-Type': 'multipart/form-data',
+            'Accept': 'application/json'
+          },
+          signal: controller.signal,
+          timeout: 10000
         }
       );
       
@@ -49,8 +53,14 @@ export const useImageProcessing = () => {
       return apiResponse.data;
     } catch (err) {
       console.error('API error:', err);
-      if (axios.isAxiosError(err) && err.code === 'ERR_CANCELED') {
-        setError("Request timed out. Please try again.");
+      if (axios.isAxiosError(err)) {
+        if (err.code === 'ERR_CANCELED') {
+          setError("Request timed out. Please try again.");
+        } else if (err.code === 'ERR_NETWORK') {
+          setError("Cannot connect to API server. Please check if the server is running.");
+        } else {
+          setError(`Failed to process image: ${err.message}`);
+        }
       } else {
         setError("Failed to process image");
       }

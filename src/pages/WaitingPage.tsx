@@ -27,12 +27,14 @@ const WaitingPage = () => {
       try {
         let result;
         if (imageData) {
+          console.log('Processing image data:', imageData.slice(0, 100) + '...');
           result = await processImage(imageData);
+          console.log('Received API response:', result);
           navigate("/scan-results", { 
             state: { 
               result,
               language,
-              imageUrl: imageData // Pass the image data URL
+              imageUrl: imageData // Pass the original image data URL
             }
           });
         } else {

@@ -1,4 +1,5 @@
 
+import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Home, ArrowLeft } from "lucide-react";
@@ -22,17 +23,20 @@ const ScanResultsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!location.state?.result) {
+      navigate("/home");
+    }
+  }, [location.state, navigate]);
+
   const result = location.state?.result;
   const language = location.state?.language as Language;
-
-  if (!result) {
-    navigate("/home");
-    return null;
-  }
 
   const extractContent = () => {
     try {
       if (typeof result.text === 'string' && result.text.includes('```json')) {
+        console.log('Parsing JSON from text field:', result.text);
         const textWithoutBackticks = result.text.replace(/```json\n|\n```/g, '');
         const parsed = JSON.parse(textWithoutBackticks);
         return {
@@ -43,6 +47,7 @@ const ScanResultsPage = () => {
         };
       }
       
+      console.log('Using direct result object:', result);
       if (typeof result === 'object') {
         return {
           ayah: result.text || "",
@@ -52,6 +57,7 @@ const ScanResultsPage = () => {
         };
       }
 
+      console.log('Failed to extract content, using default values');
       return {
         ayah: "",
         translation: "",
@@ -66,7 +72,7 @@ const ScanResultsPage = () => {
         variant: "destructive"
       });
       return {
-        ayah: result.text || "",
+        ayah: result?.text || "",
         translation: "",
         tafsir: "Error processing scan result",
         imageUrl: null
@@ -75,6 +81,10 @@ const ScanResultsPage = () => {
   };
 
   const content = extractContent();
+
+  if (!result) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen p-6 bg-gradient-to-b from-background to-muted/20 animate-fadeIn">
