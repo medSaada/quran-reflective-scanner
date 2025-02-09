@@ -14,9 +14,6 @@ export const useImageProcessing = () => {
     setIsLoading(true);
     setError(null);
     
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-    
     try {
       // Convert the base64 image to a blob
       const base64Data = imageDataUrl.split(',')[1];
@@ -42,9 +39,7 @@ export const useImageProcessing = () => {
           headers: { 
             'Content-Type': 'multipart/form-data',
             'Accept': 'application/json'
-          },
-          signal: controller.signal,
-          timeout: 10000
+          }
         }
       );
       
@@ -54,9 +49,7 @@ export const useImageProcessing = () => {
     } catch (err) {
       console.error('API error:', err);
       if (axios.isAxiosError(err)) {
-        if (err.code === 'ERR_CANCELED') {
-          setError("Request timed out. Please try again.");
-        } else if (err.code === 'ERR_NETWORK') {
+        if (err.code === 'ERR_NETWORK') {
           setError("Cannot connect to API server. Please check if the server is running.");
         } else {
           setError(`Failed to process image: ${err.message}`);
@@ -66,7 +59,6 @@ export const useImageProcessing = () => {
       }
       throw err;
     } finally {
-      clearTimeout(timeoutId);
       setIsLoading(false);
     }
   };
