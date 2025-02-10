@@ -65,6 +65,12 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
         console.log('Crop successful, setting cropped image');
         setCroppedImage(croppedImageUrl);
         setIsCropping(false);
+
+        // Process the cropped image
+        const result = await processImage(croppedImageUrl);
+        if (result && result.text) {
+          setExtractedText(result.text);
+        }
       } catch (error) {
         console.error('Error during crop:', error);
         toast({
@@ -113,12 +119,12 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
           <CardTitle>Scanner une Ayah</CardTitle>
           <CardDescription>
             {!capturedImage 
-              ? "Étape 1: Prenez en photo l'ayah que vous souhaitez étudier"
+              ? "Étape 1 : Prenez en photo l'ayah que vous souhaitez étudier"
               : isCropping
-                ? "Étape 2: Recadrez l'image pour isoler l'ayah"
+                ? "Étape 2 : Recadrez l'image pour isoler l'ayah"
                 : extractedText
-                  ? "Étape 3: Vérifiez le texte extrait"
-                  : "Étape 2: Traitement de l'image"}
+                  ? "Étape 3 : Vérifiez le texte extrait"
+                  : "Étape 2 : Traitement de l'image"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
