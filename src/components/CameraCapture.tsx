@@ -1,4 +1,3 @@
-
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Camera, CheckCircle2, XCircle } from "lucide-react";
@@ -82,25 +81,15 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
     }
   };
 
-  const handleConfirmText = async () => {
+  const handleConfirmText = () => {
     if (extractedText) {
-      try {
-        const result = await processText(extractedText, selectedLanguage);
-        navigate("/scan-results", { 
-          state: { 
-            result,
-            language: selectedLanguage,
-            imageUrl: croppedImage 
-          }
-        });
-      } catch (error) {
-        console.error('Text processing error:', error);
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Échec du traitement du texte. Veuillez réessayer.",
-        });
-      }
+      navigate("/waiting", { 
+        state: { 
+          ayahText: extractedText,
+          language: selectedLanguage,
+          imageUrl: croppedImage 
+        }
+      });
     }
   };
 
@@ -212,4 +201,3 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
 };
 
 export default CameraCapture;
-
