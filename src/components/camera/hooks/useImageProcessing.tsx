@@ -67,6 +67,7 @@ export const useImageProcessing = () => {
     isLoading,
     error,
     extractedText,
+    setExtractedText,
     processImage
   };
 };

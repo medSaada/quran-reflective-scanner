@@ -28,7 +28,7 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const { stream, error: cameraError, permissionState, initializeCamera } = useCamera();
-  const { isLoading, error: processingError, extractedText, processImage } = useImageProcessing();
+  const { isLoading, error: processingError, extractedText, setExtractedText, processImage } = useImageProcessing();
   const {
     capturedImage,
     setCapturedImage,
@@ -200,4 +200,3 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
 };
 
 export default CameraCapture;
-
