@@ -3,6 +3,8 @@ import { useState } from "react";
 import axios from "axios";
 import { useToast } from "@/components/ui/use-toast";
 import { ExtractedText } from "@/types/api";
+import { processData } from "@/utils/api";
+import { Language } from "@/types/language";
 
 export const useImageProcessing = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -63,11 +65,29 @@ export const useImageProcessing = () => {
     }
   };
 
+  const processText = async (text: string, language: Language) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const result = await processData({ text, language });
+      return result;
+    } catch (err) {
+      console.error('Text processing error:', err);
+      setError("Failed to process text");
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     isLoading,
     error,
     extractedText,
     setExtractedText,
-    processImage
+    processImage,
+    processText
   };
 };
+

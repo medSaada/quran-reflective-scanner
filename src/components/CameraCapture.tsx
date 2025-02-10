@@ -28,7 +28,7 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const { stream, error: cameraError, permissionState, initializeCamera } = useCamera();
-  const { isLoading, error: processingError, extractedText, setExtractedText, processImage } = useImageProcessing();
+  const { isLoading, error: processingError, extractedText, setExtractedText, processImage, processText } = useImageProcessing();
   const {
     capturedImage,
     setCapturedImage,
@@ -82,14 +82,25 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
     }
   };
 
-  const handleConfirmText = () => {
-    if (croppedImage) {
-      navigate("/waiting", { 
-        state: { 
-          imageData: croppedImage,
-          language: selectedLanguage 
-        }
-      });
+  const handleConfirmText = async () => {
+    if (extractedText) {
+      try {
+        const result = await processText(extractedText, selectedLanguage);
+        navigate("/scan-results", { 
+          state: { 
+            result,
+            language: selectedLanguage,
+            imageUrl: croppedImage 
+          }
+        });
+      } catch (error) {
+        console.error('Text processing error:', error);
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Échec du traitement du texte. Veuillez réessayer.",
+        });
+      }
     }
   };
 
@@ -101,6 +112,7 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
     setCroppedImage(null);
     setIsCropping(false);
     setCrop(undefined);
+    setExtractedText("");
     initializeCamera();
   };
 
@@ -200,3 +212,4 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
 };
 
 export default CameraCapture;
+
