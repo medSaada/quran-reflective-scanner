@@ -76,11 +76,11 @@ const Index = () => {
             ← Back to home
           </button>
           <CameraCapture selectedLanguage={selectedLanguage} />
-          <div className="mt-4">
+          <div className="flex justify-center mt-4">
             <LanguageSelector
               value={selectedLanguage}
               onChange={setSelectedLanguage}
-              className="w-full glass"
+              className="glass"
             />
           </div>
         </div>
@@ -94,11 +94,12 @@ const Index = () => {
           </button>
           <div className="space-y-4 glass p-6 rounded-2xl">
             <h2 className="text-xl font-semibold text-sage-700 dark:text-sage-300">Enter Ayah</h2>
-            <LanguageSelector
-              value={selectedLanguage}
-              onChange={setSelectedLanguage}
-              className="w-full"
-            />
+            <div className="flex justify-center">
+              <LanguageSelector
+                value={selectedLanguage}
+                onChange={setSelectedLanguage}
+              />
+            </div>
             <Textarea
               placeholder="Type or paste the Quranic verse here..."
               value={ayahText}
