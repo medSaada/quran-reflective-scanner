@@ -11,23 +11,34 @@ export const useCamera = () => {
   const checkCameraPermission = async () => {
     try {
       const result = await navigator.permissions.query({ name: 'camera' as PermissionName });
+      console.log('Camera permission state:', result.state);
       setPermissionState(result.state);
       
       result.addEventListener('change', () => {
+        console.log('Camera permission changed to:', result.state);
         setPermissionState(result.state);
       });
 
       if (result.state === 'granted') {
+        console.log('Camera permission already granted, initializing camera');
         initializeCamera();
       }
     } catch (error) {
       console.error('Permission check error:', error);
-      setError("Failed to check camera permissions");
+      // Fallback: try to initialize camera directly
+      initializeCamera();
     }
   };
 
   const initializeCamera = async () => {
     try {
+      console.log('Initializing camera...');
+      setError(null);
+      
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('Camera access is not supported by this browser');
+      }
+
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: 'environment',
@@ -36,19 +47,34 @@ export const useCamera = () => {
         }
       });
       
+      console.log('Camera stream obtained successfully:', mediaStream);
       setStream(mediaStream);
-      setError(null);
+      setPermissionState('granted');
+      
       toast({
-        title: "Camera activated",
-        description: "You can now capture images",
+        title: "Caméra activée",
+        description: "Vous pouvez maintenant capturer des images",
       });
     } catch (err) {
       console.error('Camera initialization error:', err);
-      setError("Failed to access camera");
+      
+      let errorMessage = "Échec de l'accès à la caméra";
+      if (err instanceof Error) {
+        if (err.name === 'NotAllowedError') {
+          errorMessage = "L'accès à la caméra a été refusé. Veuillez autoriser l'accès à la caméra.";
+          setPermissionState('denied');
+        } else if (err.name === 'NotFoundError') {
+          errorMessage = "Aucune caméra trouvée. Veuillez vous assurer que votre caméra est connectée.";
+        } else if (err.name === 'NotReadableError') {
+          errorMessage = "La caméra est utilisée par une autre application.";
+        }
+      }
+      
+      setError(errorMessage);
       toast({
         variant: "destructive",
-        title: "Camera Error",
-        description: "Failed to access camera. Please check permissions.",
+        title: "Erreur de caméra",
+        description: errorMessage,
       });
     }
   };
@@ -57,6 +83,7 @@ export const useCamera = () => {
     checkCameraPermission();
     return () => {
       if (stream) {
+        console.log('Cleaning up camera stream');
         stream.getTracks().forEach(track => track.stop());
       }
     };

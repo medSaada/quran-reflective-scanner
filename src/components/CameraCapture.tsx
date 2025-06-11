@@ -1,4 +1,5 @@
-import { useRef } from "react";
+
+import { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Camera, CheckCircle2, XCircle } from "lucide-react";
 import { Language } from "@/types/language";
@@ -39,6 +40,22 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
     setIsCropping,
     getCroppedImage
   } = useImageCropping();
+
+  // Set up video stream when available
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      console.log('Setting up video stream');
+      videoRef.current.srcObject = stream;
+      videoRef.current.play().catch(error => {
+        console.error('Error playing video:', error);
+        toast({
+          variant: "destructive",
+          title: "Erreur vidéo",
+          description: "Impossible de démarrer la vidéo de la caméra.",
+        });
+      });
+    }
+  }, [stream, toast]);
 
   const captureImage = () => {
     if (videoRef.current) {
@@ -109,10 +126,6 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
     return <CameraPermissionDenied />;
   }
 
-  if (videoRef.current && stream) {
-    videoRef.current.srcObject = stream;
-  }
-
   return (
     <div className="flex flex-col gap-6 w-full max-w-2xl mx-auto animate-fadeIn">
       <Card className="border-2 border-muted">
@@ -131,24 +144,42 @@ const CameraCapture = ({ selectedLanguage }: CameraCaptureProps) => {
         <CardContent className="space-y-4">
           {!capturedImage ? (
             <div className="relative aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-sage-900/90 to-sage-800/90 shadow-xl">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                className="w-full h-full object-cover mix-blend-overlay"
-                style={{ transform: 'scaleX(-1)' }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 transform">
-                <Button
-                  onClick={captureImage}
-                  size="icon"
-                  className="rounded-full w-12 h-12 bg-white/90 hover:bg-white/100 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-sage-300/50"
-                  disabled={isLoading || !stream}
-                >
-                  <Camera className="w-5 h-5 text-sage-800" />
-                </Button>
-              </div>
+              {stream ? (
+                <>
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover"
+                    style={{ transform: 'scaleX(-1)' }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 transform">
+                    <Button
+                      onClick={captureImage}
+                      size="icon"
+                      className="rounded-full w-12 h-12 bg-white/90 hover:bg-white/100 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-sage-300/50"
+                      disabled={isLoading}
+                    >
+                      <Camera className="w-5 h-5 text-sage-800" />
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
+                  <Button
+                    onClick={initializeCamera}
+                    className="p-6 rounded-full bg-sage-100 text-sage-700 hover:bg-sage-200 transition-colors animate-glow dark:bg-sage-900 dark:text-sage-100"
+                    disabled={isLoading}
+                  >
+                    <Camera className="w-8 h-8" />
+                  </Button>
+                  <p className="text-sm text-muted-foreground max-w-xs">
+                    {isLoading ? "Activation de la caméra..." : "Appuyez pour activer la caméra"}
+                  </p>
+                </div>
+              )}
             </div>
           ) : isCropping ? (
             <ImageCropper
